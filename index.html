@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liste Karşılaştırma Aracı</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;background:#f5f5f5;color:#1a1a1a;min-height:100vh}
+
+header{background:#fff;border-bottom:1px solid #e5e5e5;padding:14px 32px;display:flex;align-items:center;gap:12px}
+.logo{width:30px;height:30px;background:#1a1a1a;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0}
+header h1{font-size:15px;font-weight:600}
+header p{font-size:12px;color:#999;margin-top:1px}
+
+.main{max-width:860px;margin:28px auto;padding:0 20px 60px}
+
+.card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:18px 22px;margin-bottom:14px}
+.card-title{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#999;margin-bottom:12px}
+
+.drop-zone{border:1.5px dashed #d5d5d5;border-radius:9px;padding:20px;text-align:center;cursor:pointer;transition:background .15s,border-color .15s}
+.drop-zone:hover,.drop-zone.over{background:#f8f8f8;border-color:#aaa}
+.drop-zone .dz-icon{font-size:26px;display:block;margin-bottom:7px}
+.drop-zone strong{font-size:13px}
+.drop-zone p{font-size:12px;color:#aaa;margin-top:3px}
+input[type=file]{display:none}
+
+.file-badge{display:none;margin-top:9px;padding:6px 11px;background:#f0faf4;border:1px solid #b7e4c7;border-radius:7px;font-size:12px;color:#1a7a40;font-weight:500}
+
+.or-div{display:flex;align-items:center;gap:8px;margin:12px 0;font-size:12px;color:#ccc}
+.or-div::before,.or-div::after{content:'';flex:1;height:1px;background:#ebebeb}
+
+label.fl{display:block;font-size:12px;color:#666;margin-bottom:5px}
+input[type=text]{width:100%;padding:8px 11px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;color:#1a1a1a;background:#fff;transition:border-color .15s}
+input[type=text]:focus{outline:none;border-color:#999}
+.hint{font-size:11px;color:#bbb;margin-top:5px;line-height:1.5}
+
+/* Mapping table */
+.map-table{width:100%;border-collapse:collapse;font-size:13px}
+.map-table th{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#aaa;padding:0 0 8px;text-align:left}
+.map-table th.center{text-align:center}
+.map-table td{padding:5px 0;vertical-align:middle}
+.map-table td.sym{text-align:center;color:#ccc;font-size:16px;padding:0 10px}
+.map-table .field-name{font-weight:500;color:#444;padding-right:14px;white-space:nowrap;width:130px}
+.map-table .req{font-size:10px;background:#fce8e8;color:#c0392b;padding:2px 6px;border-radius:4px;margin-left:6px}
+.map-table .opt{font-size:10px;background:#f0f0f0;color:#888;padding:2px 6px;border-radius:4px;margin-left:6px}
+.map-table .sep td{padding:8px 0 4px;border-top:1px solid #f0f0f0}
+.map-table .sep td span{font-size:11px;color:#bbb;text-transform:uppercase;letter-spacing:.04em}
+
+select{width:100%;padding:6px 10px;border:1px solid #e0e0e0;border-radius:7px;font-size:12px;color:#1a1a1a;background:#fff;cursor:pointer}
+select:focus{outline:none;border-color:#999}
+
+.name-row{display:flex;gap:6px}
+.name-row select{flex:1}
+
+button{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border:1px solid #d0d0d0;border-radius:8px;background:#fff;color:#1a1a1a;font-size:13px;font-weight:500;cursor:pointer;transition:background .15s}
+button:hover{background:#f5f5f5}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+button.primary:hover{background:#333}
+button.success{background:#f0faf4;color:#1a7a40;border-color:#b7e4c7}
+button.success:hover{background:#e0f5e9}
+
+.actions{display:flex;gap:10px;margin:16px 0 8px}
+
+#progress-wrap{display:none;margin-bottom:14px}
+.prog-outer{height:4px;background:#ebebeb;border-radius:2px;overflow:hidden;margin-bottom:10px}
+.prog-inner{height:100%;background:#1a1a1a;border-radius:2px;transition:width .3s}
+.log{background:#fafafa;border:1px solid #ebebeb;border-radius:8px;padding:10px 13px;font-family:'Courier New',monospace;font-size:11px;max-height:150px;overflow-y:auto;line-height:1.8;color:#666}
+.log .ok{color:#1a7a40}.log .warn{color:#b45309}.log .err{color:#c0392b}
+
+#result-wrap{display:none}
+.stats-grid{display:grid;gap:9px;margin-bottom:10px}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.stat-card{background:#fafafa;border:1px solid #ebebeb;border-radius:9px;padding:12px 15px}
+.stat-label{font-size:11px;color:#999;margin-bottom:5px}
+.stat-val{font-size:24px;font-weight:600}
+.c-red{color:#c0392b}.c-green{color:#1a7a40}
+
+.orange-title{font-size:12px;font-weight:600;color:#b45309;margin-bottom:7px}
+.orange-item{background:#fffbf0;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:7px 11px;margin-bottom:5px;font-size:12px;line-height:1.5}
+.badge{font-size:10px;background:#fef3c7;color:#92400e;padding:2px 6px;border-radius:4px;margin-left:5px}
+
+.mode-btn{padding:8px 16px;border:1px solid #d0d0d0;border-radius:8px;background:#fff;color:#666;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
+.mode-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.mode-btn:hover:not(.active){background:#f5f5f5}
+
+@media(max-width:600px){.main{padding:0 10px 48px}.g3,.g4{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">L</div>
+  <div>
+    <h1>Liste Karşılaştırma Aracı</h1>
+    <p id="header-desc">İki listeyi karşılaştır, farklılıkları renklendirilmiş Excel olarak indir</p>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- Mod seçimi -->
+  <div class="card" style="padding:14px 22px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button id="btn-mode-compare" class="mode-btn active" onclick="setMode('compare')">⇄ Karşılaştır ve Güncelle</button>
+      <button id="btn-mode-new"     class="mode-btn"        onclick="setMode('new')">＋ Yeni Ekleme Listesi Oluştur</button>
+      <button class="mode-btn" style="margin-left:auto" onclick="toggleDict()">📖 İsim Sözlüğü</button>
+    </div>
+  </div>
+
+  <!-- İsim Sözlüğü Paneli -->
+  <div class="card" id="dict-panel" style="display:none">
+    <div class="card-title">İsim Sözlüğü — Cinsiyet Eşleştirme</div>
+    <p style="font-size:12px;color:#888;margin-bottom:14px">Buraya eklenen isimler tarayıcıya kaydedilir ve her oturumda otomatik yüklenir.</p>
+
+    <!-- Yeni isim ekleme -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
+      <input type="text" id="dict-name-input" placeholder="İsim girin (ör: Ünzile)" style="flex:1;max-width:220px" onkeydown="if(event.key==='Enter') addDictEntry()" />
+      <select id="dict-gender-input" style="width:80px;padding:7px 8px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px">
+        <option value="K">K — Kadın</option>
+        <option value="E">E — Erkek</option>
+      </select>
+      <button onclick="addDictEntry()" style="padding:8px 14px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">+ Ekle</button>
+    </div>
+
+    <!-- Arama -->
+    <input type="text" id="dict-search" placeholder="İsim ara..." style="margin-bottom:12px;max-width:280px" oninput="renderDict()" />
+
+    <!-- Sözlük tablosu -->
+    <div style="max-height:320px;overflow-y:auto;border:1px solid #ebebeb;border-radius:8px">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="background:#fafafa;position:sticky;top:0">
+            <th style="text-align:left;padding:8px 12px;border-bottom:1px solid #ebebeb;font-weight:600;font-size:11px;color:#888;text-transform:uppercase">İsim</th>
+            <th style="text-align:center;padding:8px 12px;border-bottom:1px solid #ebebeb;font-weight:600;font-size:11px;color:#888;text-transform:uppercase;width:80px">Cinsiyet</th>
+            <th style="text-align:center;padding:8px 12px;border-bottom:1px solid #ebebeb;font-weight:600;font-size:11px;color:#888;text-transform:uppercase;width:60px">Kaynak</th>
+            <th style="width:40px;border-bottom:1px solid #ebebeb"></th>
+          </tr>
+        </thead>
+        <tbody id="dict-tbody"></tbody>
+      </table>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+      <span style="font-size:12px;color:#aaa" id="dict-count"></span>
+      <button onclick="clearCustomDict()" style="margin-left:auto;padding:6px 12px;font-size:12px;color:#c0392b;border:1px solid #f5c6c6;border-radius:7px;background:#fff;cursor:pointer">Özel girişleri temizle</button>
+    </div>
+  </div>
+
+  <!-- 1: Ana liste (sadece compare modunda) -->
+  <div class="card" id="card-main">
+    <div class="card-title">1 — Ana liste (.xlsx)</div>
+    <div class="drop-zone" id="dz-main" onclick="document.getElementById('inp-main').click()">
+      <span class="dz-icon">📋</span>
+      <strong>Güncellenecek listeyi seç veya sürükle</strong>
+      <p>.xlsx dosyası</p>
+      <input type="file" id="inp-main" accept=".xlsx">
+    </div>
+    <div class="file-badge" id="main-badge"></div>
+  </div>
+
+  <!-- 2: Kaynak -->
+  <div class="card">
+    <div class="card-title" id="src-card-title">2 — Kaynak verisi</div>
+    <label class="fl">Google Sheets URL (herkese açıksa otomatik çeker)</label>
+    <input type="text" id="sheet-url" placeholder="https://docs.google.com/spreadsheets/d/..." />
+    <p class="hint">Paylaşım → Genel erişim → "Bağlantıya sahip herkes" → Görüntüleyici</p>
+    <div class="or-div">veya</div>
+    <div class="drop-zone" id="dz-src" onclick="document.getElementById('inp-src').click()">
+      <span class="dz-icon">📊</span>
+      <strong>Kaynak Excel yükle</strong>
+      <p>.xlsx dosyası</p>
+      <input type="file" id="inp-src" accept=".xlsx">
+    </div>
+    <div class="file-badge" id="src-badge"></div>
+  </div>
+
+  <!-- 3: Sütun eşleştirme (karşılaştırma modu) -->
+  <div class="card" id="mapping-card" style="display:none">
+    <div class="card-title">3 — Sütun eşleştirme</div>
+    <table class="map-table">
+      <thead>
+        <tr>
+          <th style="width:130px">Alan</th>
+          <th>Ana Liste</th>
+          <th class="center" style="width:40px"></th>
+          <th>Kaynak</th>
+        </tr>
+      </thead>
+      <tbody id="map-body"></tbody>
+    </table>
+  </div>
+
+  <!-- 2: Sütun eşleştirme (yeni liste modu) -->
+  <div class="card" id="new-mapping-card" style="display:none">
+    <div class="card-title">2 — Sütun eşleştirme</div>
+    <p style="font-size:12px;color:#888;margin-bottom:14px">Kaynak dosyadaki sütunları çıktı alanlarına eşleştirin. Otomatik algılanır, gerekirse düzeltin.</p>
+    <table class="map-table">
+      <thead>
+        <tr>
+          <th style="width:160px">Çıktı alanı</th>
+          <th class="center" style="width:40px"></th>
+          <th>Kaynak sütun</th>
+        </tr>
+      </thead>
+      <tbody id="new-map-body"></tbody>
+    </table>
+  </div>
+
+  <!-- Çalıştır -->
+  <div class="actions">
+    <button class="primary" id="btn-run" disabled onclick="handleRun()">▶ Karşılaştır ve Güncelle</button>
+  </div>
+
+  <!-- Progress -->
+  <div id="progress-wrap">
+    <div class="prog-outer"><div class="prog-inner" id="pbar" style="width:0%"></div></div>
+    <div class="log" id="log"></div>
+  </div>
+
+  <!-- Sonuç -->
+  <div id="result-wrap">
+    <div class="card">
+      <div class="card-title">Sonuç</div>
+      <!-- Compare modu sonuç -->
+      <div id="result-compare">
+        <div class="stats-grid g3" style="margin-bottom:10px">
+          <div class="stat-card"><div class="stat-label">🔴 Kırmızı — çıkacak</div><div class="stat-val c-red" id="s-red">0</div></div>
+          <div class="stat-card"><div class="stat-label">🟢 Yeşil — yeni eklenen</div><div class="stat-val c-green" id="s-new">0</div></div>
+          <div class="stat-card"><div class="stat-label">Toplam güncelleme</div><div class="stat-val" id="s-upd">0</div></div>
+        </div>
+        <div class="stats-grid g4" style="margin-bottom:16px">
+          <div class="stat-card"><div class="stat-label">Kimlik</div><div class="stat-val" id="s-id">0</div></div>
+          <div class="stat-card"><div class="stat-label">Servis Kodu</div><div class="stat-val" id="s-svc">0</div></div>
+          <div class="stat-card"><div class="stat-label">Telefon</div><div class="stat-val" id="s-tel">0</div></div>
+          <div class="stat-card"><div class="stat-label">Adres</div><div class="stat-val" id="s-addr">0</div></div>
+        </div>
+        <div id="orange-wrap" style="display:none;margin-bottom:14px">
+          <div class="orange-title">⚠ Kontrol gerektiren eşleşmeler</div>
+          <div id="orange-list"></div>
+        </div>
+      </div>
+      <!-- Yeni liste modu sonuç -->
+      <div id="result-new" style="display:none">
+        <div class="stats-grid g3" style="margin-bottom:16px">
+          <div class="stat-card"><div class="stat-label">🟢 Oluşturulan kayıt</div><div class="stat-val c-green" id="s-created">0</div></div>
+          <div class="stat-card"><div class="stat-label">Kadın (K)</div><div class="stat-val" id="s-female">0</div></div>
+          <div class="stat-card"><div class="stat-label">Erkek (E)</div><div class="stat-val" id="s-male">0</div></div>
+        </div>
+
+        <!-- Mükerrer özet -->
+        <div id="dup-summary" style="display:none;margin-bottom:16px">
+          <div style="font-size:13px;font-weight:600;color:#b45309;margin-bottom:10px">⚠ Mükerrer Kayıtlar</div>
+          <div class="stats-grid g3" style="margin-bottom:12px">
+            <div class="stat-card" style="border-left:3px solid #ffa500">
+              <div class="stat-label">🟠 Kesin mükerrer</div>
+              <div class="stat-val" id="dup-exact">0</div>
+              <div style="font-size:11px;color:#aaa;margin-top:4px">Aynı isim + telefon</div>
+            </div>
+            <div class="stat-card" style="border-left:3px solid #ffd700">
+              <div class="stat-label">🟡 Şüpheli (aynı tel)</div>
+              <div class="stat-val" id="dup-phone">0</div>
+              <div style="font-size:11px;color:#aaa;margin-top:4px">Farklı isim, aynı numara</div>
+            </div>
+            <div class="stat-card" style="border-left:3px solid #e0e0a0">
+              <div class="stat-label">🔔 Olası (aynı isim)</div>
+              <div class="stat-val" id="dup-name">0</div>
+              <div style="font-size:11px;color:#aaa;margin-top:4px">Aynı isim, farklı numara</div>
+            </div>
+          </div>
+          <div style="border:1px solid #ebebeb;border-radius:8px;overflow:hidden;max-height:280px;overflow-y:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+              <thead>
+                <tr style="background:#fafafa;position:sticky;top:0">
+                  <th style="text-align:left;padding:8px 10px;border-bottom:1px solid #ebebeb;font-size:11px;color:#888;font-weight:600">Ad Soyad</th>
+                  <th style="text-align:left;padding:8px 10px;border-bottom:1px solid #ebebeb;font-size:11px;color:#888;font-weight:600">Telefon</th>
+                  <th style="text-align:left;padding:8px 10px;border-bottom:1px solid #ebebeb;font-size:11px;color:#888;font-weight:600">Departman</th>
+                  <th style="text-align:left;padding:8px 10px;border-bottom:1px solid #ebebeb;font-size:11px;color:#888;font-weight:600">Tip</th>
+                </tr>
+              </thead>
+              <tbody id="dup-tbody"></tbody>
+            </table>
+          </div>
+          <p style="font-size:11px;color:#aaa;margin-top:8px">Excel çıktısında mükerrer satırlar renk bandı ile işaretlenmiştir. Ayrıca "MÜKERRER RAPORU" adlı ikinci bir sayfa oluşturulmuştur.</p>
+        </div>
+      </div>
+      <button class="success" onclick="downloadFile()">⬇ İndir (.xlsx)</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ─── State ──────────────────────────────────────────────────────────── */
+let mainBuf = null, srcDf = null, outputBuf = null;
+let mainCols = [], srcCols = [];
+
+/* ─── Mapping field definitions ──────────────────────────────────────── */
+const FIELDS = [
+  { key:'id',       label:'Kimlik (ID)',     required:true,
+    mainHints:['sicil','sap','numara','no','id','code'],
+    srcHints: ['sap','sicil','no','id','numara','code'] },
+  { key:'name',     label:'Ad Soyad',        required:true,  nameField:true,
+    mainHints:['adı','adi','ad','isim','name'],
+    srcHints: ['adi','ad','isim','name','soyad'] },
+  { key:'phone',    label:'Telefon',          required:true,
+    mainHints:['tel','gsm','cep','phone','mobil'],
+    srcHints: ['tel','gsm','cep','phone','mobil'] },
+  { key:'address',  label:'Adres',            required:false,
+    mainHints:['adres','address'],
+    srcHints: ['adres','address'] },
+  { key:'svc',      label:'Servis / Güzergah Kodu', required:false,
+    mainHints:['g.kodu','gkodu','servis','route code','güzergah kodu','güz.kod'],
+    srcHints: ['servis kodu','servis','g.kodu','route','güzergah kodu'] },
+  { key:'dept',     label:'Departman / Grup', required:false,
+    mainHints:['departman','bölüm','grup','department'],
+    srcHints: ['proje','grup','departman','department','bölüm'] },
+  { key:'route',    label:'Güzergah Adı',     required:false,
+    mainHints:['güzergah adı','güzergah','bölge','route name'],
+    srcHints: ['bölge','güzergah','route'] },
+];
+
+/* ─── New-list mode field definitions ───────────────────────────────── */
+/* Maps output column → source hints */
+const NEW_FIELDS = [
+  { out:'Ad Soyad (kaynak)',   key:'name',      required:true,
+    hints:['ad soyad','adi soyadi','adisoyadi','ad-soyad','isim','name','adi','ad'] },
+  { out:'Telefon',             key:'phone',     required:true,
+    hints:['telefon','tel','gsm','cep','phone','mobil','tel no'] },
+  { out:'Adres (→ Adresi)',    key:'address',   required:false,
+    hints:['adres','address'] },
+  { out:'Durak (→ Kısa Adres)',key:'stop',      required:false,
+    hints:['durak','stop','kisa adres','kısa adres','durak adi'] },
+  { out:'Departman',           key:'dept',      required:false,
+    hints:['firma','departman','proje','grup','department','sirket','şirket'] },
+  { out:'Güzergah / Servis Kodu', key:'svc',   required:false,
+    hints:['guzergah','güzergah','servis kodu','servis','g.kodu','route','bölge','bolge'] },
+  { out:'Kimlik / SAP No',     key:'id',        required:false,
+    hints:['sap','sicil','no','id','numara','code','kimlik'] },
+];
+
+function showNewMapping(cols) {
+  const tbody = $('new-map-body');
+  tbody.innerHTML = '';
+
+  for (const f of NEW_FIELDS) {
+    const detected = bestMatch(f.hints, cols);
+    const opts = ['', ...cols].map(c =>
+      `<option value="${c}" ${c===detected?'selected':''}>${c||'— boş bırak —'}</option>`
+    ).join('');
+
+    const badgeHtml = f.required
+      ? '<span class="req">Zorunlu</span>'
+      : '<span class="opt">Opsiyonel</span>';
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="field-name">${f.out}${badgeHtml}</td>
+      <td class="sym">←</td>
+      <td><select id="nmap_${f.key}">${opts}</select></td>`;
+    tbody.appendChild(tr);
+  }
+
+  $('new-mapping-card').style.display = 'block';
+  checkReady();
+}
+
+function getNewMapping() {
+  const m = {};
+  NEW_FIELDS.forEach(f => { m[f.key] = val('nmap_'+f.key); });
+  return m;
+}
+
+const $ = id => document.getElementById(id);
+
+/* ─── Drop zones ─────────────────────────────────────────────────────── */
+function setupDrop(dzId, inputId, onFile) {
+  const dz = $(dzId), inp = $(inputId);
+  inp.onchange = e => e.target.files[0] && onFile(e.target.files[0]);
+  dz.ondragover = e => { e.preventDefault(); dz.classList.add('over'); };
+  dz.ondragleave = () => dz.classList.remove('over');
+  dz.ondrop = e => { e.preventDefault(); dz.classList.remove('over'); e.dataTransfer.files[0] && onFile(e.dataTransfer.files[0]); };
+}
+
+setupDrop('dz-main','inp-main', async f => {
+  const r = new FileReader();
+  r.onload = async e => {
+    mainBuf = e.target.result;
+    mainCols = await getColumns(e.target.result);
+    badge('main-badge', f.name + ' — ' + mainCols.length + ' sütun');
+    tryShowMapping();
+  };
+  r.readAsArrayBuffer(f);
+});
+
+setupDrop('dz-src','inp-src', async f => {
+  const r = new FileReader();
+  r.onload = async e => {
+    srcDf = await parseExcel(e.target.result);
+    srcCols = srcDf.length ? Object.keys(srcDf[0]) : [];
+    badge('src-badge', f.name + ' — ' + srcDf.length + ' satır');
+    if (currentMode === 'new') showNewMapping(srcCols);
+    else tryShowMapping();
+  };
+  r.readAsArrayBuffer(f);
+});
+
+$('sheet-url').oninput = () => {
+  if ($('sheet-url').value.trim() && currentMode === 'compare' && mainCols.length) tryShowMapping();
+  checkReady();
+};
+
+function badge(id, txt) { const el=$(id); el.textContent='✓ '+txt; el.style.display='block'; }
+
+/* ─── Column helpers ─────────────────────────────────────────────────── */
+async function getColumns(buf) {
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(buf);
+  const ws = wb.worksheets[0];
+  const cols = [];
+  ws.getRow(1).eachCell(c => { if(c.value) cols.push(String(c.value).trim()); });
+  return cols;
+}
+
+async function parseExcel(buf) {
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(buf);
+  const ws = wb.worksheets[0];
+  const rows = []; let headers = null;
+  ws.eachRow((row,rn) => {
+    const vals = row.values.slice(1);
+    if(rn===1){ headers=vals.map(v=>v==null?'':String(v).trim()); return; }
+    if(!headers) return;
+    const obj={};
+    headers.forEach((h,i)=>{ obj[h]=vals[i]==null?null:vals[i]; });
+    rows.push(obj);
+  });
+  return rows;
+}
+
+function bestMatch(hints, cols) {
+  const norm = s => String(s).toLowerCase().replace(/[\s\-\.]/g,'');
+  for(const hint of hints)
+    for(const col of cols)
+      if(norm(col).includes(norm(hint)) || norm(hint).includes(norm(col))) return col;
+  return '';
+}
+
+/* ─── Mapping UI ─────────────────────────────────────────────────────── */
+function tryShowMapping() {
+  const hasSrc = srcDf || $('sheet-url').value.trim();
+  if(!mainCols.length || !hasSrc) return;
+
+  // If srcCols empty (sheet URL mode), use empty for now — we'll detect after fetch
+  const sc = srcCols.length ? srcCols : [];
+
+  const tbody = $('map-body');
+  tbody.innerHTML='';
+
+  // Detect if main has split name (Adı + Soyadı)
+  const hasFirst = mainCols.find(c=>/^adı?$/i.test(c.trim()));
+  const hasLast  = mainCols.find(c=>/^soyadı?$/i.test(c.trim()));
+
+  for(let fi=0; fi<FIELDS.length; fi++){
+    const f = FIELDS[fi];
+
+    // Separator before optional group
+    if(fi>0 && !f.required && FIELDS[fi-1].required){
+      const sep=document.createElement('tr'); sep.className='sep';
+      sep.innerHTML='<td colspan="4"><span>İsteğe bağlı alanlar</span></td>';
+      tbody.appendChild(sep);
+    }
+
+    const tr = document.createElement('tr');
+    const badgeHtml = f.required
+      ? '<span class="req">Zorunlu</span>'
+      : '<span class="opt">Opsiyonel</span>';
+
+    let mainSel, srcSel;
+
+    if(f.key==='name' && hasFirst && hasLast){
+      /* Split name: show two dropdowns */
+      const optMain = ['', ...mainCols].map(c=>`<option value="${c}" ${c===hasFirst?'selected':''}>${c||'— seçin —'}</option>`).join('');
+      const optMainL= ['', ...mainCols].map(c=>`<option value="${c}" ${c===hasLast?'selected':''}>${c||'— seçin —'}</option>`).join('');
+      mainSel = `<div class="name-row">
+        <select id="map_main_nameA">${optMain}</select>
+        <select id="map_main_nameB">${optMainL}</select>
+      </div>`;
+    } else {
+      const detected = bestMatch(f.mainHints, mainCols);
+      const opts = ['', ...mainCols].map(c=>`<option value="${c}" ${c===detected?'selected':''}>${c||'— seçin —'}</option>`).join('');
+      mainSel = `<select id="map_main_${f.key}">${opts}</select>`;
+    }
+
+    if(sc.length){
+      const detected = bestMatch(f.srcHints, sc);
+      const opts = ['', ...sc].map(c=>`<option value="${c}" ${c===detected?'selected':''}>${c||'— seçin —'}</option>`).join('');
+      srcSel = `<select id="map_src_${f.key}">${opts}</select>`;
+    } else {
+      srcSel = `<select id="map_src_${f.key}" disabled><option>— sheet yüklenince —</option></select>`;
+    }
+
+    tr.innerHTML = `
+      <td class="field-name">${f.label}${badgeHtml}</td>
+      <td>${mainSel}</td>
+      <td class="sym">↔</td>
+      <td>${srcSel}</td>`;
+    tbody.appendChild(tr);
+  }
+
+  $('mapping-card').style.display='block';
+  checkReady();
+}
+
+function getMapping(){
+  const hasFirst=$('map_main_nameA'), hasLast=$('map_main_nameB');
+  return {
+    main:{
+      id:   val('map_main_id'),
+      nameA: hasFirst ? hasFirst.value : null,
+      nameB: hasLast  ? hasLast.value  : null,
+      nameSingle: (!hasFirst && $('map_main_name')) ? val('map_main_name') : null,
+      phone: val('map_main_phone'),
+      address: val('map_main_address'),
+      svc:  val('map_main_svc'),
+      dept: val('map_main_dept'),
+      route:val('map_main_route'),
+    },
+    src:{
+      id:   val('map_src_id'),
+      name: val('map_src_name'),
+      phone:val('map_src_phone'),
+      address:val('map_src_address'),
+      svc:  val('map_src_svc'),
+      dept: val('map_src_dept'),
+      route:val('map_src_route'),
+    }
+  };
+}
+
+function val(id){ const el=$(id); return el ? el.value : ''; }
+
+function checkReady(){
+  const hasSrc = srcDf || $('sheet-url').value.trim();
+  if (currentMode === 'new') {
+    $('btn-run').disabled = !hasSrc;
+  } else {
+    $('btn-run').disabled = !(mainBuf && hasSrc);
+  }
+}
+
+/* ─── Normalization ──────────────────────────────────────────────────── */
+function normName(x){
+  if(!x) return '';
+  let s=String(x).toUpperCase().trim();
+  [['İ','I'],['Ğ','G'],['Ü','U'],['Ş','S'],['Ö','O'],['Ç','C']].forEach(([a,b])=>s=s.split(a).join(b));
+  return s.replace(/\s+/g,' ').trim();
+}
+function normPhone(x){
+  if(!x) return '';
+  let s=String(x).trim().replace(/\.0$/,'').replace(/\D/g,'');
+  if(s.startsWith('90')&&s.length>10) s=s.slice(2);
+  if(s.startsWith('0')) s=s.slice(1);
+  return s;
+}
+function safeInt(x){ const v=parseFloat(x); return isNaN(v)?null:Math.round(v); }
+function simStr(a,b){
+  if(!a||!b) return 1;
+  a=String(a); b=String(b);
+  const m=a.length,n=b.length;
+  const dp=Array.from({length:m+1},(_,i)=>Array.from({length:n+1},(_,j)=>i===0?j:j===0?i:0));
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++)
+    dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return 1-dp[m][n]/Math.max(m,n);
+}
+function normStr(x){
+  if(!x) return '';
+  let s=String(x).toUpperCase().trim();
+  [['İ','I'],['Ğ','G'],['Ü','U'],['Ş','S'],['Ö','O'],['Ç','C']].forEach(([a,b])=>s=s.split(a).join(b));
+  return s.replace(/\s+/g,' ').trim();
+}
+function extractAddr(addr){
+  const s=normStr(addr||'');
+  const mah=(s.match(/([A-Z0-9 ]+?)\s*(?:MAH(?:ALLE(?:SI)?)?\.?)\b/)||[])[1]||'';
+  const cad=(s.match(/([A-Z0-9 /]+?)\s*(?:CAD(?:DESI)?\.?)\b/)||[])[1]||'';
+  const sok=(s.match(/([A-Z0-9/. ]+?)\s*(?:SOK(?:AK)?\.?|SK\.?)\b/)||[])[1]||'';
+  const ILCE=['PENDIK','KARTAL','MALTEPE','SULTANBEYLI','SANCAKTEPE','UMRANIYE','GEBZE','DARICA','DERINCE','IZMIT','KORFEZ','TUZLA','CAYIROVA','USKUDAR','KADIKOY','ATASEHIR','CEKMEKOY','BEYKOZ'];
+  return{mah:mah.trim(),cad:cad.trim(),sok:sok.trim(),ilce:ILCE.find(i=>s.includes(i))||''};
+}
+function addrChanged(ya,sa){
+  if(!sa||!String(sa).trim()||!ya||!String(ya).trim()) return false;
+  const y=extractAddr(ya),s=extractAddr(sa);
+  if(y.mah&&s.mah&&simStr(y.mah,s.mah)<0.7) return true;
+  if(y.ilce&&s.ilce&&y.ilce!==s.ilce) return true;
+  if(y.cad&&s.cad&&simStr(y.cad,s.cad)<0.7) return true;
+  if(y.sok&&s.sok&&simStr(y.sok,s.sok)<0.7) return true;
+  return false;
+}
+
+/* ─── Google Sheets ──────────────────────────────────────────────────── */
+async function fetchGSheet(url){
+  const m=url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if(!m) throw new Error('Geçersiz Google Sheets URL');
+  const id=m[1], gid=(url.match(/gid=(\d+)/)||[])[1]||'0';
+  const resp=await fetch(`https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`);
+  if(!resp.ok) throw new Error('Google Sheets erişilemedi. Sayfayı "Bağlantıya sahip herkes → Görüntüleyici" yapın.');
+  const text=await resp.text();
+  return new Promise((res,rej)=>Papa.parse(text,{header:true,skipEmptyLines:true,complete:r=>res(r.data),error:rej}));
+}
+
+/* ─── Log / Progress ─────────────────────────────────────────────────── */
+function log(msg,cls=''){const d=$('log'),l=document.createElement('div');l.className=cls;l.textContent=msg;d.appendChild(l);d.scrollTop=d.scrollHeight;}
+function pct(p){$('pbar').style.width=p+'%';}
+
+/* ─── Cinsiyet tahmini ───────────────────────────────────────────────── */
+const GENDER_MAP = (()=>{
+  const E='E', K='K';
+  const m = {
+    /* A */
+    'ABDULHADİ':E,'ABDULKADİR':E,'ABDULLAH':E,'ABDULMENAF':E,'ABDULMUTTALİP':E,
+    'ABDULSAMED':E,'ABDULSAMET':E,'ABDURREZZAK':E,'ABDÜLKADİR':E,'ABDÜLKERİM':E,
+    'ABİDİN':E,'ADALET':K,'ADEM':E,'ADNAN':E,'ADİL':E,'AGİT':E,'AHMET':E,
+    'AKIN':E,'AKSA':K,'AKİF':E,'ALAİDDİN':E,'ALEV':K,'ALEYNA':K,
+    'ALPARSLAN':E,'ALPER':E,'ALPEREN':E,'ALTAN':E,'ALİ':E,'ALİBEY':E,
+    'ALİCAN':E,'ALİHAN':E,'ANIL':E,'ARDA':E,'ARIJ':K,'ARJİN':K,
+    'ARZU':K,'ARİF':E,'ARİFE':K,'ASLI':K,'ASLIHAN':K,'ASİYE':K,
+    'ATALAY':E,'AYBÜKE':K,'AYCAN':K,'AYDENİZ':K,'AYFER':K,'AYHAN':E,
+    'AYKUT':E,'AYNUR':K,'AYSU':K,'AYSUN':K,'AYTEN':K,'AYÇA':K,
+    'AYŞE':K,'AYŞEN':K,'AYŞENUR':K,'AZAM':E,'AZRA':K,'AZİZ':E,'AZİZE':K,
+    /* B */
+    'BAHADIR':E,'BAHADIRHAN':E,'BAHAR':K,'BARAN':E,'BARIŞ':E,'BARKIN':E,
+    'BATIKAN':E,'BATIN':E,'BATUHAN':E,'BAYRAM':E,'BEDİA':K,'BEDİHA':K,
+    'BEDİRHAN':E,'BEKİR':E,'BERAT':E,'BERDAN':E,'BERFİN':K,'BERKAN':E,
+    'BERKANT':E,'BERKAY':E,'BERNA':K,'BERİVAN':K,'BESRA':K,'BETÜL':K,
+    'BEYTULLAH':E,'BEYZA':K,'BEŞİR':E,'BUKET':K,'BULUT':E,'BURAK':E,
+    'BURCU':K,'BURHANETTİN':E,'BURÇİN':K,'BUSE':K,'BUSENA':K,'BÜKET':K,
+    'BÜLENT':E,'BÜNYAMİN':E,'BÜŞRA':K,'BİLAL':E,'BİNNAZ':K,'BİRGÜL':K,
+    'BİRKAN':E,'BİROL':E,'BÜNYAN':E,
+    /* C-Ç */
+    'CAFER':E,'CAN':E,'CANAN':K,'CANDENİZ':K,'CANER':E,'CANSU':K,
+    'CELAL':E,'CEMAL':E,'CEMRE':K,'CEMİLE':K,'CENGİZ':E,'CENK':E,
+    'CEREN':K,'CERENSU':K,'CEYDA':K,'CEYHAN':E,'CEYLAN':K,'COŞKUN':E,
+    'CÜNEYT':E,'CİHAD':E,'CİHAN':E,'CİHAT':E,
+    'ÇAĞDAŞ':E,'ÇAĞLAR':E,'ÇAĞRI':E,'ÇİSİL':K,'ÇİĞDEM':K,
+    /* D */
+    'DAMLA':K,'DAVUT':E,'DELAL':K,'DENİZ':K,'DERSİM':K,'DERYA':K,
+    'DEĞER':K,'DOĞAN':E,'DOĞANCAN':E,'DOĞUKAN':E,'DURAN':E,'DURSUN':E,
+    'DUYGU':K,'DİDEM':K,'DİLAN':K,'DİLARA':K,'DİLAVER':E,'DİLAY':K,'DİLEK':K,
+    /* E */
+    'EBRAR':K,'EBRU':K,'ECE':K,'ECEM':K,'ECENUR':K,'EDA':K,'EDANUR':K,
+    'EFE':E,'EGE':E,'EGEMEN':E,'EĞEMEN':E,'EKREM':E,'EKİN':K,'ELMAS':K,
+    'ELVİN':E,'ELÇİN':K,'ELİF':K,'EMEL':K,'EMRAH':E,'EMRE':E,'EMRECAN':E,
+    'EMRULLAH':E,'EMİN':E,'EMİNE':K,'EMİRCAN':E,'EMİRHAN':E,'ENES':E,
+    'ENGİN':E,'ENSAR':E,'ENVER':E,'ENİZ':E,'ERASLAN':E,'ERAY':E,'ERCAN':E,
+    'ERCEHAN':E,'ERDAL':E,'ERDEM':E,'ERDİNÇ':E,'EREN':E,'ERENAY':E,
+    'ERGÜL':K,'ERHAN':E,'ERKAN':E,'EROL':E,'ERSEL':E,'ERSİN':E,'ERTAN':E,
+    'ERTUĞRUL':E,'ESER':K,'ESLEM':K,'ESMA':K,'ESME':K,'ESRA':K,'EVREN':E,
+    'EVRİM':K,'EYLÜL':K,'EYÜP':E,'EZGİ':K,
+    /* F */
+    'FAHRETTİN':E,'FAHRİ':E,'FARUK':E,'FATMA':K,'FATMANUR':K,'FATOŞ':K,
+    'FATİH':E,'FATİME':K,'FAİK':E,'FERDİ':E,'FERHAT':E,'FERİDUN':E,
+    'FERİT':E,'FEYZA':K,'FIRAT':E,'FUAT':E,'FURKAN':E,'FİDAN':K,
+    'FİGEN':K,'FİKRET':E,'FİKRİ':E,'FİLİZ':K,
+    /* G */
+    'GAMZE':K,'GURBET':K,'GÖKAY':E,'GÖKBERK':E,'GÖKDENİZ':E,'GÖKHAN':E,
+    'GÖKMEN':E,'GÖKSEL':E,'GÖKSENİN':K,'GÖKÇENUR':K,'GÖNÜL':K,'GÖREN':E,
+    'GÖRKEM':E,'GÖZDE':K,'GÖZDENUR':K,'GÜL':K,'GÜLAY':K,'GÜLCAN':K,
+    'GÜLER':K,'GÜLFER':K,'GÜLLER':K,'GÜLLÜ':K,'GÜLNAZ':K,'GÜLPERİ':K,
+    'GÜLSEN':K,'GÜLSEREN':K,'GÜLSÜM':K,'GÜLTEKİN':E,'GÜLÇİN':K,
+    'GÜLÜZAR':K,'GÜLİN':K,'GÜLİSTAN':K,'GÜLŞEN':K,'GÜNAY':K,'GÜNEY':E,
+    'GÜNEŞ':K,'GÜNGÖR':E,'GÜRKAN':E,'GİZEM':K,
+    /* H */
+    'HABİBE':K,'HACER':K,'HACI':E,'HAFİZE':K,'HAKAN':E,'HAKİME':K,
+    'HALENUR':K,'HALİL':E,'HALİME':K,'HALİS':E,'HAMDİ':E,'HAMZA':E,
+    'HAMİ':E,'HAMİDE':K,'HAMİT':E,'HAMİYET':K,'HANDAN':K,'HANIM':K,
+    'HANİFE':K,'HARUN':E,'HASAN':E,'HASİBE':K,'HATUN':K,'HATİCE':K,
+    'HAVVA':K,'HAYAT':K,'HAYDAR':E,'HAYRETTİN':E,'HAYRİYE':K,'HELİN':K,
+    'HIDIR':E,'HİCABİ':E,'HİLAL':K,'HİRANUR':K,'HOZAN':E,'HÜLYA':K,
+    'HÜSEYİN':E,'HÜSNÜ':E,'HÜZEYFE':E,
+    /* İ */
+    'İBRAHİM':E,'İDRİS':E,'İDİL':K,'İHSAN':E,'İKRAM':E,'İLAYDA':K,
+    'İLHAN':E,'İLKER':E,'İLKNUR':K,'İLYAS':E,'İMDAT':E,'İPEK':K,
+    'İREM':K,'İRFAN':E,'İSA':E,'İSMAİL':E,'İZEL':K,'İZZET':E,
+    /* K */
+    'KAAN':E,'KADER':K,'KADİR':E,'KAMİLE':K,'KASIM':E,'KAYA':E,
+    'KAZIM':E,'KEMAL':E,'KENAN':E,'KEREM':E,'KERİM':E,'KUBİLAY':E,
+    'KÜBRA':K,'KÜPER':E,
+    /* L */
+    'LEVENT':E,'LEYLA':K,'LEZGİN':E,'LÜTFİ':E,'LÜTFİYE':K,
+    /* M */
+    'MAHFUZ':E,'MAHMUT':E,'MAHSUN':E,'MALİK':E,'MAVİLİ':K,'MAZLUM':E,
+    'MEDİNE':K,'MEHMET':E,'MELEK':K,'MELTEM':K,'MELİH':E,'MELİHA':K,
+    'MELİK':E,'MELİKE':K,'MELİSA':K,'MENDERES':E,'MERAL':K,'MERCAN':K,
+    'MERDAN':E,'MERT':E,'MERTAN':E,'MERTCAN':E,'MERVAN':E,'MERVE':K,
+    'MERVENUR':K,'MERYEM':K,'MESUT':E,'METİN':E,'MEVLÜDE':K,'MEVLÜT':E,
+    'MİKAİL':E,'MİRAÇ':E,'MİTHAT':E,'MUAMMER':E,'MUHAMMED':E,'MUHAMMET':E,
+    'MUHARREM':E,'MUHLİS':E,'MURAT':E,'MURATCAN':E,'MURATHAN':E,'MUSA':E,
+    'MUSTAFA':E,'MUTLU':E,'MUZAFFER':E,'MÜCAHİT':E,'MÜNEVVER':K,'MÜNÜRE':K,
+    'MÜZEYYEN':K,
+    /* N */
+    'NADYA':K,'NADİR':E,'NAGEHAN':K,'NAGİHAN':K,'NARİN':K,'NAZ':K,
+    'NAZAN':K,'NAZIM':E,'NAZIR':E,'NAZLI':K,'NAZLICAN':K,'NAZİFE':K,
+    'NAZİRE':K,'NAİL':E,'NAİM':E,'NEBİ':E,'NECDET':E,'NECLA':K,
+    'NECİP':E,'NEDİM':E,'NERMİN':K,'NESLİHAN':K,'NESİBE':K,'NEZAKET':K,
+    'NEŞE':K,'NİHAT':E,'NİLAY':K,'NİLDA':K,'NİLÜFER':K,'NİYAZİ':E,
+    'NUH':E,'NURAL':K,'NURAN':K,'NURCAN':K,'NURETTİN':E,'NURGÜL':K,
+    'NURSEL':K,'NURSENA':K,'NURTAÇ':K,'NURULLAH':E,'NURİ':E,'NURİYE':K,
+    /* O-Ö */
+    'OKAN':E,'OKTAY':E,'OLGUN':E,'ONUR':E,'ONURCAN':E,'ORHAN':E,'OSMAN':E,
+    'OZAN':E,'OĞULCAN':E,'OĞUZ':E,'OĞUZHAN':E,
+    'ÖMER':E,'ÖZCAN':E,'ÖZDEN':K,'ÖZER':E,'ÖZGE':K,'ÖZGÜL':K,'ÖZGÜR':E,
+    'ÖZKAN':E,'ÖZLEM':K,
+    /* P */
+    'PERİHAN':K,'PINAR':K,'POLAT':E,
+    /* R */
+    'RABİA':K,'RAMAZAN':E,'RASİM':E,'RASİME':K,'RECEP':E,'REMZİYE':K,
+    'RESUL':E,'RIDVAN':E,'RIZA':E,'ROJDA':K,'ROJHAT':E,'RUSLAN':E,
+    'RÜMEYSA':K,'RÜYANUR':K,
+    /* S-Ş */
+    'SABAHATTİN':E,'SABRİ':E,'SABRİYE':K,'SAFİYE':K,'SAKİN':E,'SAKİNE':K,
+    'SALİH':E,'SALİHA':K,'SAMED':E,'SAMET':E,'SAMETCAN':E,'SAMİ':E,
+    'SATILMIŞ':E,'SAVAŞ':E,'SAİME':K,'SAİT':E,'SEBAHATTİN':E,'SEDA':K,
+    'SEDAT':E,'SEDEF':K,'SEFA':E,'SEHER':K,'SELAHATTİN':E,'SELAMİ':E,
+    'SELMA':K,'SELÇUK':E,'SELİN':K,'SELİNAY':K,'SEMA':K,'SEMANUR':K,
+    'SEMAT':E,'SEMRA':K,'SEMİH':E,'SENA':K,'SENEM':K,'SERAP':K,
+    'SERCAN':E,'SERDAL':E,'SERDAR':E,'SERENAY':K,'SERHAN':E,'SERHAT':E,
+    'SERKAN':E,'SERPİL':K,'SEVDA':K,'SEVGÜL':K,'SEVGİ':K,'SEVİL':K,
+    'SEVİLAY':K,'SEVİNÇ':K,'SEYHAN':K,'SEZAİ':E,'SEZER':E,'SEZGİN':E,
+    /* Eksik kadın isimleri — veri setinden ve yaygın Türkçe isimlerden */
+    'TÜRKAN':K,'SEBAHAT':K,'ÜNZİLE':K,'ÜNGİYE':K,'ÜMMİYE':K,
+    'AYLA':K,'AYSEL':K,'AYŞİN':K,'ALİYE':K,'AZİZE':K,
+    'BEDRİYE':K,'BELMA':K,'BİLGE':K,'BERNA':K,
+    'CANGÜL':K,'CEMİLE':K,
+    'ELMIRA':K,'ELVAN':K,'ELİFNUR':K,'EMİNE':K,
+    'FERİDE':K,'FUNDA':K,'FÜSUN':K,
+    'GÖKÇE':K,'GÜLŞAH':K,'GÜLİZAR':K,'GÜLNUR':K,'GÜLTEN':K,
+    'HAVA':K,'HURİYE':K,'HURİ':K,
+    'IŞILAY':K,'IŞIL':K,'IŞIN':K,
+    'KADRİYE':K,'KALBİYE':K,'KEZBAN':K,'KIYMET':K,
+    'MELİSA':K,'MESUDİYE':K,'MİNE':K,'MÜJDE':K,
+    'NAZİLE':K,'NERİMAN':K,'NURDAN':K,'NURİNNİSA':K,'NURŞEN':K,
+    'NİGAR':K,'NİLGÜN':K,'NİLSU':K,'NİLUFER':K,
+    'PELİN':K,'PEMBE':K,'PERVİN':K,
+    'RUYET':K,'RUZİYE':K,'RİME':K,
+    'SEMİHA':K,'SERDA':K,'SELVER':K,'SEVDİYE':K,'SIDIKA':K,
+    'SOLMAZ':K,'SÜHEYLA':K,'SÜREYYA':K,
+    'TÜLAY':K,'TÜLİN':K,'TÜRKİYE':K,
+    'YELDA':K,'YEŞİM':K,
+    'ZÜHRE':K,'ZÜLEYHA':K,'ZÜBEYDE':K,'ZELİHAN':K,
+    'ÇAĞLA':K,'ÇIĞLA':K,
+    'ÖZLEm':K,'ÖZGE':K,'ÖZDEN':K,
+    'ÜLVİYE':K,'ÜMMÜHAN':K,
+    'İFFET':K,'İLKNUR':K,'İREM':K,'İNCİ':K,'İNCİLAY':K,
+    'ŞULE':K,'ŞEHRİNAZ':K,'ŞÜKRAN':K,
+    /* Ek yaygın kadın isimleri */
+    'NURAY':K,'NURTEN':K,'NURHAN':K,'NURİYE':K,
+    'SATIYE':K,'SANİYE':K,'SAFİYE':K,'SAADET':K,
+    'RAHİME':K,'RAZİYE':K,'RABİA':K,
+    'MÜNEVVER':K,'MÜLKİYE':K,
+    'HACER':K,'HAMİDE':K,'HAYRİYE':K,'HATİCE':K,'HATUN':K,
+    'GÜLSEVİL':K,'GÜLÜMSER':K,'GÜZIDE':K,'GÜZİN':K,
+    'FATİME':K,'FATOS':K,'FAHRIYE':K,'FAHRİYE':K,
+    'EYYÜBE':K,'EMİNE':K,
+    'DİLRUBA':K,'DİLNOZA':K,
+    'CİHANGİR':E,'CİHAT':E,
+    'BAHARİYE':K,'BAHİYE':K,
+    'ASİYE':K,'ASUMAN':K,'ASLI':K,
+    'AFET':K,'AFİFE':K,'AFİYE':K,
+    'SEÇKİN':E,'SILA':K,'SİBEL':K,'SİNAN':E,'SİNEM':K,'SONER':E,
+    'SONGÜL':K,'SUAT':E,'SUDE':K,'SUDENAZ':K,'SULTAN':K,'SUNA':K,
+    'SÜLEYMAN':E,'SÜMEYYE':K,
+    'ŞABAN':E,'ŞAHZADE':K,'ŞAHİN':E,'ŞEBNEM':K,'ŞEHRİ':K,'ŞEHRİBAN':K,
+    'ŞENEL':E,'ŞENGÜL':K,'ŞENOL':E,'ŞERAFETTİN':E,'ŞERİFE':K,'ŞEVKET':E,
+    'ŞEYMA':K,'ŞİLAN':K,'ŞİRİN':K,'ŞURA':K,'ŞÜHEDA':K,'ŞÜKRAN':K,'ŞÜKRÜ':E,
+    /* T */
+    'TAHA':E,'TAHİR':E,'TAMER':E,'TANER':E,'TANJU':E,'TARIK':E,'TAYFUN':E,
+    'TEMİR':E,'TENZİRE':K,'TOLGA':E,'TUANA':K,'TUBA':K,'TUGAY':E,
+    'TUNAHAN':E,'TUNCAY':E,'TUNCER':E,'TURAN':E,'TURGAY':E,'TURGUT':E,
+    'TURHAN':E,'TURKAY':E,'TUĞBA':K,'TUĞBANUR':K,'TUĞÇE':K,
+    /* U-Ü */
+    'UFUK':E,'UFUKCAN':E,'ULKU':K,'ÜLKÜHAN':K,'ÜLMİYE':K,'ÜLVİYE':K,
+    'UMUT':E,'UMUTCAN':E,'UMUTHAN':E,'ÜMMET':E,'ÜMMÜGÜL':K,'ÜMMÜHAN':K,
+    'ÜMİT':E,'ÜNAL':E,'UĞUR':E,'UĞURCAN':E,
+    /* V */
+    'VASFİYE':K,'VEDAT':E,'VELİ':E,'VEYSEL':E,'VEYSİ':E,'VİLDAN':K,'VOLKAN':E,
+    /* Y */
+    'YADİGAR':K,'YAHYA':E,'YAKUP':E,'YAMEN':E,'YAREN':K,'YASEMİN':K,
+    'YASER':E,'YASİN':E,'YAVUZ':E,'YAZGÜL':K,'YAĞMUR':K,'YAŞAR':E,
+    'YENER':E,'YENİGÜL':K,'YEŞİM':K,'YILDIRIM':E,'YILDIZ':K,'YILMAZ':E,
+    'YİĞİT':E,'YONCA':K,'YUNUS':E,'YUNUSHAN':E,'YUSUF':E,'YÜCEL':E,'YÜKSEL':E,
+    /* Z */
+    'ZAFER':E,'ZAHİDE':K,'ZEHRA':K,'ZEKİ':E,'ZEKİYE':K,'ZELİHA':K,
+    'ZEYNEP':K,'ZİKRULLAH':E,'ZİLAN':K,'ZOHR':K,'ZÖHRE':K,'ZUHAL':K,
+    'ZÜLKARNİ':E,
+    /* Listeden eksik kalan ve ek isimler */
+    'MUHAMMED':E,'OĞUZHAN':E,'SEMİH':E,'BÜNYAMİN':E,'BÜNYAMIN':E,
+    'KASIM':E,'GÜL':K,'İSA':E,'KENAN':E,'NECLA':K,'OKTAY':E,'ÖZKAN':E,
+    'RIDVAN':E,'SEMA':K,'SERPİL':K,'SILA':K,'SUAT':E,'ŞABAN':E,
+    'TUGAY':E,'TURGAY':E,'TURHAN':E,'ÜNAL':E,'ZELİHA':K,'ŞEHRİ':K,
+    'DURSUN':E,'ECEM':K,'EDANUR':K,'EGE':E,'ERAY':E,'ERDİNÇ':E,'EYÜP':E,
+    'FAİK':E,'FİGEN':K,'GÜLİSTAN':K,'GÜLNAZ':K,'GÜLÜZAR':K,'HACI':E,
+    'KAYA':E,'MAHSUN':E,'MEDİNE':K,'MELİHA':K,'MERCAN':K,'MERTCAN':E,
+    'MUSA':E,'NADİR':E,'NAZLICAN':K,'NEBİ':E,'NİYAZİ':E,'NURAL':K,
+    'NURAN':K,'OĞULCAN':E,'OĞUZ':E,'OLGUN':E,'ONURCAN':E,'ÖZER':E,
+    'RASIM':E,'RIZA':E,'RUSLAN':E,'SABAHATTİN':E,'SAİT':E,'SAKIN':E,
+    'SAMED':E,'SAMETCAN':E,'SAMİ':E,'SEÇKİN':E,'SEDEF':K,'SEFA':E,
+    'SELAHATTİN':E,'SELAMİ':E,'SEMANUR':K,'SEMAT':E,'SENEM':K,
+    'SEVGÜL':K,'SEVİL':K,'SEVİLAY':K,'SEZAİ':E,'SEZER':E,'SUNA':K,
+    'ŞAHZADE':K,'ŞEHRİBAN':K,'ŞENEL':E,'ŞERAFETTİN':E,'ŞEVKET':E,
+    'ŞİLAN':K,'ŞİRİN':K,'TAHİR':E,'TANJU':E,'TARIK':E,'TEMİR':E,
+    'TENZİRE':K,'TUĞBANUR':K,'TUNCER':E,'TURKAY':E,'UFUKCAN':E,
+    'UĞURCAN':E,'UMUTHAN':E,'ÜLKÜHAN':K,'ÜLMİYE':K,'ÜLVİYE':K,
+    'ÜMMET':E,'ÜMMÜGÜL':K,'ÜMMÜHAN':K,'VASFİYE':K,'YADİGAR':K,
+    'YAMEN':E,'YASER':E,'YAZGÜL':K,'YENER':E,'YENİGÜL':K,'YILDIRIM':E,
+    'YONCA':K,'YUNUSHAN':E,'YÜKSEL':E,'ZEKİYE':K,'ZİKRULLAH':E,
+    'SATILMIŞ':E,'MAZLUM':E,'MUZAFFER':E,'MİTHAT':E,'MİRAÇ':E,
+    'MENDERES':E,'MELİK':E,'MERDAN':E,'MERTAN':E,'MERVAN':E,
+    'MEVLÜT':E,'MUAMMER':E,'MUHLİS':E,'MURATCAN':E,'MURATHAN':E,
+    'MUTLU':E,'MÜCAHİT':E,'MÜNÜRE':K,'MÜZEYYEN':K,'NADYA':K,
+    'NAGİHAN':K,'NAİL':E,'NAİM':E,'NAZIM':E,'NAZIR':E,'NAZİFE':K,
+    'NAZİRE':K,'NECİP':E,'NEDİM':E,'NERMİN':K,'NESİBE':K,'NEZAKET':K,
+    'NEŞE':K,'NİLAY':K,'NİLDA':K,'NUH':E,'NURİYE':K,'NURSEL':K,'NURTAÇ':K,
+    'HAMDİ':E,'HAMİ':E,'HAMİDE':K,'HAMİT':E,'HAMİYET':K,'HANDAN':K,
+    'HANIM':K,'HANİFE':K,'HARUN':E,'HASİBE':K,'HATUN':K,'HAYAT':K,
+    'HAYRETTİN':E,'HIDIR':E,'HİCABİ':E,'HİRANUR':K,'HOZAN':E,
+    'HÜSNÜ':E,'HÜZEYFE':E,'İDRİS':E,'İHSAN':E,'İKRAM':E,'İMDAT':E,
+    'İZEL':K,'İZZET':E,'KAMİLE':K,'KERİM':E,'KUBİLAY':E,'KÜPER':E,
+    'LEZGİN':E,'LÜTFİ':E,'LÜTFİYE':K,'MAHFUZ':E,'MALİK':E,'MAVİLİ':K,
+    'BAHADIRHAN':E,'BARKIN':E,'BATIKAN':E,'BATIN':E,'BERDAN':E,
+    'BERKAN':E,'BERKANT':E,'BEŞİR':E,'BİRKAN':E,'BİROL':E,
+    'BURHANETTİN':E,'CERENSU':K,'CEYHAN':E,'ÇAĞDAŞ':E,'DEĞER':K,
+    'DERSİM':K,'DİLAY':K,'DOĞANCAN':E,'DURAN':E,'EBRAR':K,'ECENUR':K,
+    'EKİN':K,'ELÇİN':K,'ELMAS':K,'ELVİN':E,'EMİRCAN':E,'EMİRHAN':E,
+    'ENİZ':E,'ENSAR':E,'ENVER':E,'ERASLAN':E,'ERCEHAN':E,'ERENAY':E,
+    'ERSEL':E,'ESLEM':K,'ESME':K,'EVRİM':K,'FAHRİ':E,'FATİME':K,
+    'FERDİ':E,'FERİDUN':E,'FİDAN':K,'FİKRET':E,'FİKRİ':E,'FUAT':E,
+    'GÖKAY':E,'GÖKBERK':E,'GÖKDENİZ':E,'GÖKMEN':E,'GÖKSEL':E,
+    'GÖKSENİN':K,'GÖKÇENUR':K,'GÖRKEM':E,'GÖREN':E,'GÖZDENUR':K,
+    'GURBET':K,'GÜLER':K,'GÜLİN':K,'GÜLLER':K,'GÜLPERİ':K,
+    'GÜLSEREN':K,'GÜLTEKİN':E,'GÜNAY':K,'GÜNEŞ':K,'GÜNGÖR':E,
+    'HABİBE':K,'HAFİZE':K,'HAKİME':K,'HALENUR':K,'HALİME':K,'HALİS':E,
+    'AGİT':E,'AKSA':K,'ALAİDDİN':E,'ALTAN':E,'ARIJ':K,'AZAM':E,
+    /* İkinci isim olarak sık kullanılan kadın isimleri */
+    'NUR':K,'NURU':K,'GÜLÜ':K,'GÜLÜ':K,'HANM':K,'BANU':K,'CANSU':K,
+    'NURAY':K,'LEMAN':K,'LALE':K,'GONCA':K,'PERLA':K,'TÜLAY':K,
+    'NEVIN':K,'NEVİN':K,'TANER':E,'EMRE':E,'CAN':E,'BAHA':E,
+    'HAKAN':E,'KEMAL':E,'OSMAN':E,'HÜSEYIN':E,'HÜSEYÍN':E,
+    /* Normalize edilmiş (ASCII) versiyonlar */
+    'MUHAMMED':E,'OGUZHAN':E,'SEMIH':E,'BUNYAMIN':E,'KASIM':E,
+    'GUL':K,'ISA':E,'NECLA':K,'SEMA':K,'SERPIL':K,'SABAN':E,'SUAT':E,
+    'ZELIKA':K,'SEHRI':K,'OMER':E,'YASEMIN':K,'GONCA':K,'LALE':K,
+    'JALE':K,'RANA':K,'REYHAN':K,'NALAN':K,'ULKU':K,'UMRAN':K,
+  };
+  /* Normalize yardımcı: İ→I vb. */
+  const norm=s=>{
+    let r=String(s||'').toUpperCase().trim();
+    [['İ','I'],['Ğ','G'],['Ü','U'],['Ş','S'],['Ö','O'],['Ç','C']].forEach(([a,b])=>r=r.split(a).join(b));
+    return r;
+  };
+  /* Her iki versiyonu da ekle (orijinal + normalize) */
+  const result={};
+  for(const [k,v] of Object.entries(m)){ result[k]=v; result[norm(k)]=v; }
+  return result;
+})();
+
+/* ─── Özel isim sözlüğü (localStorage'a kalıcı) ──────────────────────── */
+const LS_KEY = 'gender_dict_custom_v1';
+
+function loadCustomDict() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY)||'{}'); } catch { return {}; }
+}
+function saveCustomDict(d) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(d)); } catch {}
+}
+
+/* Özel girişleri ana haritaya yükle */
+function applyCustomDict() {
+  const custom = loadCustomDict();
+  const normFn = s => {
+    let r = String(s||'').toUpperCase().trim();
+    [['İ','I'],['Ğ','G'],['Ü','U'],['Ş','S'],['Ö','O'],['Ç','C']].forEach(([a,b])=>r=r.split(a).join(b));
+    return r;
+  };
+  for (const [k,v] of Object.entries(custom)) {
+    GENDER_MAP[k.toUpperCase()] = v;
+    GENDER_MAP[normFn(k)] = v;
+  }
+}
+applyCustomDict(); /* Sayfa yüklenince uygula */
+
+function addDictEntry() {
+  const inp = $('dict-name-input');
+  const name = inp.value.trim().toUpperCase();
+  if (!name) return;
+  const gender = $('dict-gender-input').value;
+  const custom = loadCustomDict();
+  custom[name] = gender;
+  saveCustomDict(custom);
+  applyCustomDict();
+  inp.value = '';
+  renderDict();
+}
+
+function removeDictEntry(name) {
+  const custom = loadCustomDict();
+  delete custom[name];
+  delete custom[name.toUpperCase()];
+  saveCustomDict(custom);
+  /* Haritadan kaldır — sadece özel girişi, yerleşik olanı değil */
+  delete GENDER_MAP[name.toUpperCase()];
+  renderDict();
+}
+
+function clearCustomDict() {
+  if (!confirm('Özel eklediğiniz tüm isimler silinecek. Devam edilsin mi?')) return;
+  saveCustomDict({});
+  /* Sayfayı yenile ki yerleşik sözlük geri gelsin */
+  location.reload();
+}
+
+function toggleDict() {
+  const p = $('dict-panel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+  if (p.style.display === 'block') renderDict();
+}
+
+function renderDict() {
+  const custom  = loadCustomDict();
+  const search  = ($('dict-search').value||'').toUpperCase().trim();
+  const tbody   = $('dict-tbody');
+  tbody.innerHTML = '';
+
+  /* Yerleşik + özel tüm isimler */
+  const builtIn = {};
+  for (const [k,v] of Object.entries(GENDER_MAP)) {
+    /* Sadece normalize edilmemiş (Türkçe karakterli veya ilk girilen) versiyonu göster */
+    if (/^[A-ZÇĞİÖŞÜa-zçğıöşü]+$/.test(k) && k === k.toUpperCase()) builtIn[k] = v;
+  }
+
+  const customKeys = Object.keys(custom).map(k=>k.toUpperCase());
+  const allEntries = [];
+
+  /* Özel girişler (üstte göster) */
+  for (const [k,v] of Object.entries(custom)) {
+    if (!search || k.toUpperCase().includes(search)) allEntries.push({name:k.toUpperCase(), gender:v, source:'özel'});
+  }
+  /* Yerleşik girişler */
+  for (const [k,v] of Object.entries(builtIn)) {
+    if (customKeys.includes(k)) continue; /* özel ile çakışıyorsa atla */
+    if (!search || k.includes(search)) allEntries.push({name:k, gender:v, source:'yerleşik'});
+  }
+
+  allEntries.sort((a,b) => a.name.localeCompare(b.name, 'tr'));
+
+  $('dict-count').textContent = `${allEntries.length} isim (${customKeys.length} özel)`;
+
+  for (const e of allEntries) {
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid #f5f5f5';
+    const badgeColor = e.gender==='K' ? '#fce4ec' : '#e3f2fd';
+    const badgeText  = e.gender==='K' ? '#880e4f' : '#0d47a1';
+    const srcBadge   = e.source==='özel'
+      ? '<span style="font-size:10px;background:#e8f5e9;color:#2e7d32;padding:2px 7px;border-radius:4px">özel</span>'
+      : '<span style="font-size:10px;color:#ccc">dahili</span>';
+    const delBtn = e.source==='özel'
+      ? `<button onclick="removeDictEntry('${e.name}')" style="background:none;border:none;color:#e57373;cursor:pointer;font-size:16px;line-height:1;padding:2px 6px">×</button>`
+      : '';
+    tr.innerHTML = `
+      <td style="padding:7px 12px;font-weight:500">${e.name}</td>
+      <td style="text-align:center;padding:7px 12px">
+        <span style="background:${badgeColor};color:${badgeText};padding:2px 10px;border-radius:10px;font-size:12px;font-weight:600">${e.gender}</span>
+      </td>
+      <td style="text-align:center;padding:7px 12px">${srcBadge}</td>
+      <td style="text-align:center;padding:7px 4px">${delBtn}</td>`;
+    tbody.appendChild(tr);
+  }
+
+  if (!allEntries.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:#bbb;font-size:13px">Sonuç yok</td></tr>';
+  }
+}
+
+function predictGender(fullName){
+  if(!fullName) return 'E';
+  /* İlk kelimeyi al */
+  const first=String(fullName).trim().split(/\s+/)[0].toUpperCase();
+  const normFirst=(s=>{
+    let r=s;
+    [['İ','I'],['Ğ','G'],['Ü','U'],['Ş','S'],['Ö','O'],['Ç','C']].forEach(([a,b])=>r=r.split(a).join(b));
+    return r;
+  })(first);
+
+  /* Sözlükte varsa direkt döndür */
+  if(GENDER_MAP[first])     return GENDER_MAP[first];
+  if(GENDER_MAP[normFirst]) return GENDER_MAP[normFirst];
+
+  /* Sözlükte yoksa son-ek buluşsal analizi */
+  const n=normFirst;
+  /* Kadın ekleri */
+  if(/HANM$|HANIM$/.test(n)) return 'K';
+  if(/(GUL|NUR|NAZ|IYE|IZE|ANE|ANI|IYYE)$/.test(n)) return 'K';
+  if(/(SELMA|NURSEL|SONGUL|BIRGUL|NURGUL|ERGUL)$/.test(n)) return 'K';
+  /* Erkek ekleri */
+  if(/(HAN|TAN|OGLU|CAN|ALP|BEY|ER|AN)$/.test(n) && n.length>4) return 'E';
+  if(/^(MEHMET|MUSTAFA|AHMET|ALI|HASAN|HUSEIN|IBRAHIM|ISMAIL|MUHAMMET|MEHMED)/.test(n)) return 'E';
+  /* Varsayılan */
+  return 'E';
+}
+
+/* ─── Main update ────────────────────────────────────────────────────── */
+async function runUpdate(){
+  $('btn-run').disabled=true;
+  $('progress-wrap').style.display='block';
+  $('result-wrap').style.display='none';
+  $('result-compare').style.display='block';
+  $('result-new').style.display='none';
+  $('log').innerHTML='';
+  outputBuf=null;
+
+  const stats={red:0,id:0,svc:0,tel:0,addr:0,new:0};
+  const orangeRows=[];
+
+  const RED_FILL  ={type:'pattern',pattern:'solid',fgColor:{argb:'FFFF0000'}};
+  const GRN_FILL  ={type:'pattern',pattern:'solid',fgColor:{argb:'FF00B050'}};
+  const ORA_FILL  ={type:'pattern',pattern:'solid',fgColor:{argb:'FFFF6600'}};
+  const RED_FONT  ={color:{argb:'FFFFFFFF'},bold:false};
+  const GRN_FONT  ={color:{argb:'FFFFFFFF'},bold:false};
+  const ORA_FONT  ={color:{argb:'FFFFFFFF'},bold:false};
+  const NO_FILL   ={type:'pattern',pattern:'none'};
+  const NO_FONT   ={color:{argb:'FF000000'},bold:false};
+
+  try{
+    /* 1. Source */
+    pct(5); log('Kaynak yükleniyor...');
+    const sheetUrl=$('sheet-url').value.trim();
+    if(sheetUrl){
+      srcDf=await fetchGSheet(sheetUrl);
+      srcCols=srcDf.length?Object.keys(srcDf[0]):[];
+      log('✓ Google Sheets: '+srcDf.length+' satır','ok');
+      for(const f of FIELDS){
+        const el=$('map_src_'+f.key);
+        if(el&&el.disabled){
+          const detected=bestMatch(f.srcHints,srcCols);
+          el.disabled=false; el.innerHTML='';
+          ['', ...srcCols].forEach(c=>{
+            const opt=document.createElement('option');
+            opt.value=c; opt.textContent=c||'— seçin —';
+            if(c===detected) opt.selected=true;
+            el.appendChild(opt);
+          });
+        }
+      }
+    } else if(!srcDf){ throw new Error('Kaynak seçilmedi.'); }
+    else { log('✓ Kaynak Excel: '+srcDf.length+' satır','ok'); }
+
+    /* 2. Mapping */
+    const mp=getMapping();
+    if(!mp.main.id||!mp.src.id) throw new Error('Kimlik (ID) sütunları eşleştirilmedi.');
+
+    pct(15); log('Ana liste yükleniyor...');
+
+    /* Orijinal dosyayı SADECE OKUMA için yükle */
+    const srcWb=new ExcelJS.Workbook();
+    await srcWb.xlsx.load(mainBuf);
+    const srcWs=srcWb.worksheets[0];
+    log('✓ Ana liste: '+(srcWs.rowCount-1)+' satır','ok');
+
+    /* Kolon haritası */
+    const colIdx={};
+    srcWs.getRow(1).eachCell((c,cn)=>{ if(c.value) colIdx[String(c.value).trim()]=cn; });
+    const ci=name=>colIdx[name];
+    const numCols=Math.max(...Object.values(colIdx));
+
+    /* 3. Source lookups */
+    pct(25); log('Karşılaştırma hazırlanıyor...');
+    const srcById={}, srcByName={}, srcByPhone={};
+    function srcId(row){ return safeInt(row[mp.src.id]); }
+    function srcName(row){ return normName(row[mp.src.name]||''); }
+    function srcPhone(row){ return normPhone(row[mp.src.phone]||''); }
+    for(const src of srcDf){ const id=srcId(src); if(id) srcById[id]=src; }
+
+    /* 4. Orijinal satırları oku → tüm hücre değerlerini sakla */
+    const mainRows=[];
+    srcWs.eachRow((row,rn)=>{
+      if(rn===1) return;
+      const g=cn=>srcWs.getCell(rn,cn).value;
+      /* Tüm sütun değerlerini array olarak sakla */
+      const vals=[];
+      for(let c=1;c<=numCols;c++) vals.push(g(c));
+
+      const getF=name=>{ const c=ci(name); return c?vals[c-1]:null; };
+      const firstN=mp.main.nameA?String(getF(mp.main.nameA)||''):'';
+      const lastN =mp.main.nameB?String(getF(mp.main.nameB)||''):'';
+      const singN =mp.main.nameSingle?String(getF(mp.main.nameSingle)||''):'';
+      mainRows.push({
+        rn, vals,
+        id:   safeInt(getF(mp.main.id)),
+        name: normName((firstN+' '+lastN).trim()||singN),
+        phone:normPhone(getF(mp.main.phone)),
+        addr: getF(mp.main.address),
+        svc:  getF(mp.main.svc)
+      });
+    });
+
+    const mainIds=new Set(mainRows.map(r=>r.id).filter(Boolean));
+    const srcIds =new Set(Object.keys(srcById).map(Number));
+
+    for(const src of srcDf){
+      const id=srcId(src);
+      if(id&&mainIds.has(id)) continue;
+      const n=srcName(src), p=srcPhone(src);
+      if(n){ if(!srcByName[n]) srcByName[n]=[]; srcByName[n].push(src); }
+      if(p&&p.length>=10){ if(!srcByPhone[p]) srcByPhone[p]=[]; srcByPhone[p].push(src); }
+    }
+
+    /* 5. Alt eşleştirme */
+    pct(40); log('Eşleştirme yapılıyor...');
+    const altMatch={};
+    const matchedSrcIds=new Set();
+    for(const mr of mainRows){
+      if(mr.id&&srcIds.has(mr.id)){ matchedSrcIds.add(mr.id); continue; }
+      const nm=srcByName[mr.name]||[];
+      const pm=(mr.phone&&mr.phone.length>=10)?(srcByPhone[mr.phone]||[]):[];
+      const both=nm.filter(s=>pm.includes(s));
+      if(both.length)        altMatch[mr.rn]={conf:'both',src:both[0]};
+      else if(nm.length===1) altMatch[mr.rn]={conf:'name_only',src:nm[0]};
+      else if(pm.length===1) altMatch[mr.rn]={conf:'phone_only',src:pm[0]};
+    }
+    for(const{src}of Object.values(altMatch)){
+      const id=srcId(src); if(id) matchedSrcIds.add(id);
+    }
+
+    /* 6. Gerçekten yeni */
+    const trulyNew=srcDf.filter(src=>{
+      const id=srcId(src);
+      return id&&!mainIds.has(id)&&!matchedSrcIds.has(id);
+    });
+
+    /* 7. ÇIKTI: Sıfırdan yeni workbook oluştur
+       ExcelJS'in "shared styles" sorununu önlemek için mevcut dosyayı
+       değiştirmek yerine yeni bir workbook oluşturup veriyi oraya yazıyoruz. */
+    pct(55); log('Çıktı dosyası oluşturuluyor...');
+
+    const outWb=new ExcelJS.Workbook();
+    const outWs=outWb.addWorksheet(srcWs.name||'Sayfa1');
+
+    /* Kolon genişliklerini kopyala */
+    for(let c=1;c<=numCols;c++){
+      const srcCol=srcWs.getColumn(c);
+      if(srcCol.width) outWs.getColumn(c).width=srcCol.width;
+    }
+
+    /* Header satırını kopyala (ilk satır) */
+    const hdrVals=[];
+    for(let c=1;c<=numCols;c++) hdrVals.push(srcWs.getCell(1,c).value);
+    const hdrRow=outWs.addRow(hdrVals);
+    hdrRow.font={bold:true};
+    hdrRow.height=srcWs.getRow(1).height||undefined;
+
+    /* Veri satırlarını işle */
+    let maxNo=0;
+
+    for(const mr of mainRows){
+      /* Sıra numarasını takip et */
+      const seqCol=ci('#');
+      if(seqCol&&typeof mr.vals[seqCol-1]==='number'&&mr.vals[seqCol-1]>maxNo)
+        maxNo=mr.vals[seqCol-1];
+
+      let src,conf;
+      if(mr.id&&srcById[mr.id]){ src=srcById[mr.id]; conf='sap'; }
+      else if(altMatch[mr.rn]){ conf=altMatch[mr.rn].conf; src=altMatch[mr.rn].src; }
+
+      /* Güncel değerleri ve hangi sütunların değiştiğini hesapla */
+      const newVals=[...mr.vals];
+      const changedCols=new Set();
+      let isRed=false;
+
+      if(!src){
+        /* Eşleşme yok → kırmızı */
+        isRed=true;
+        stats.red++;
+      } else {
+        const isOrange=(conf!=='sap'&&conf!=='both');
+        if(isOrange) orangeRows.push({conf,mr,src});
+
+        /* Kimlik değişti mi? */
+        const newId=srcId(src);
+        const idCol=ci(mp.main.id);
+        if(idCol&&newId&&newId!==mr.id){
+          newVals[idCol-1]=newId; changedCols.add(idCol); stats.id++;
+        }
+        /* Servis kodu */
+        const svcCol=ci(mp.main.svc);
+        if(svcCol&&mp.src.svc){
+          const oldV=String(mr.vals[svcCol-1]||'').trim();
+          const newV=String(src[mp.src.svc]||'').trim();
+          if(newV&&oldV!==newV){ newVals[svcCol-1]=newV; changedCols.add(svcCol); stats.svc++; }
+        }
+        /* Telefon */
+        const telCol=ci(mp.main.phone);
+        if(telCol&&mp.src.phone){
+          const nt=srcPhone(src);
+          if(nt&&nt!==mr.phone){ newVals[telCol-1]=nt; changedCols.add(telCol); stats.tel++; }
+        }
+        /* Adres */
+        const adrCol=ci(mp.main.address);
+        if(adrCol&&mp.src.address&&addrChanged(mr.addr,src[mp.src.address])){
+          newVals[adrCol-1]=src[mp.src.address]; changedCols.add(adrCol); stats.addr++;
+        }
+      }
+
+      /* Satırı çıktıya yaz */
+      const outRow=outWs.addRow(newVals);
+      if(srcWs.getRow(mr.rn).height) outRow.height=srcWs.getRow(mr.rn).height;
+
+      if(isRed){
+        /* Tüm dolu hücreleri kırmızı yap */
+        for(let c=1;c<=numCols;c++){
+          if(newVals[c-1]!=null){
+            outRow.getCell(c).fill=RED_FILL;
+            outRow.getCell(c).font=RED_FONT;
+          }
+        }
+      } else {
+        /* Sadece değişen hücreleri renklendir, diğerleri renksiz */
+        const fill=(conf==='sap'||conf==='both')?GRN_FILL:ORA_FILL;
+        const font=(conf==='sap'||conf==='both')?GRN_FONT:ORA_FONT;
+        changedCols.forEach(colNum=>{
+          outRow.getCell(colNum).fill=fill;
+          outRow.getCell(colNum).font=font;
+        });
+      }
+    }
+
+    /* 8. Yeni eklenenleri ikinci sayfaya yaz — "YENİ EKLENENLER" formatı */
+    pct(82); log('Yeni eklenenler ayrı sayfaya yazılıyor...');
+
+    /* İkinci sayfa sütun şeması (sabit format) */
+    const NEW_SHEET_COLS = [
+      'Cinsiyet','Sicil No','Adı','Soyadı','Tel','Email',
+      'Site','Semt','Adresi','Kısa Adres','Görev',
+      'Departman','Açıklama','G.Kodu','Güzergah Adı'
+    ];
+    /* Hangi sütunlar doluysa yeşil boyanacak */
+    const NEW_SHEET_COLOR_COLS = new Set([
+      'Adı','Soyadı','Tel','Adresi','Departman','G.Kodu','Güzergah Adı','Sicil No'
+    ]);
+
+    const newWs=outWb.addWorksheet('YENİ EKLENENLER');
+
+    /* Sütun genişlikleri */
+    const NEW_SHEET_WIDTHS = {
+      'Cinsiyet':8,'Sicil No':10,'Adı':18,'Soyadı':18,'Tel':13,
+      'Email':20,'Site':13,'Semt':13,'Adresi':50,'Kısa Adres':15,
+      'Görev':10,'Departman':22,'Açıklama':15,'G.Kodu':13,'Güzergah Adı':25
+    };
+    NEW_SHEET_COLS.forEach((h,i)=>{
+      newWs.getColumn(i+1).width=NEW_SHEET_WIDTHS[h]||12;
+    });
+
+    /* Header satırı */
+    const newHdrRow=newWs.addRow(NEW_SHEET_COLS);
+    newHdrRow.font={bold:true};
+    newHdrRow.eachCell(c=>{
+      c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFD9D9D9'}};
+      c.border={bottom:{style:'thin',color:{argb:'FF999999'}}};
+    });
+
+    for(const src of trulyNew){
+      const fullN=String(src[mp.src.name]||'').trim();
+      const parts=fullN.split(' ');
+      const last=parts.pop()||'';
+      const first=parts.join(' ');
+      const tel=normPhone(src[mp.src.phone]||'');
+
+      /* Her kolon için değer map'i */
+      const valMap={
+        'Cinsiyet': predictGender(fullN),
+        'Sicil No':  srcId(src)||null,
+        'Adı':       first||null,
+        'Soyadı':    last||null,
+        'Tel':       tel?(parseInt(tel)||tel):null,
+        'Email':     null,
+        'Site':      null,
+        'Semt':      null,
+        'Adresi':    (mp.src.address&&src[mp.src.address])||null,
+        'Kısa Adres':null,
+        'Görev':     null,
+        'Departman': (mp.src.dept&&src[mp.src.dept])||(mp.src.svc&&src[mp.src.svc])||null,
+        'Açıklama':  null,
+        'G.Kodu':    (mp.src.svc&&src[mp.src.svc])||null,
+        'Güzergah Adı':(mp.src.route&&src[mp.src.route])||null,
+      };
+
+      const rowVals=NEW_SHEET_COLS.map(h=>valMap[h]);
+      newWs.addRow(rowVals);
+      stats.new++;
+    }
+
+    /* 9. Kaydet */
+    pct(93); log('Dosya kaydediliyor...');
+    outputBuf=await outWb.xlsx.writeBuffer();
+    pct(100); log('✓ Tamamlandı — '+(outWs.rowCount-1)+' satır','ok');
+
+    $('s-red').textContent =stats.red;
+    $('s-new').textContent =stats.new;
+    $('s-upd').textContent =stats.id+stats.svc+stats.tel+stats.addr;
+    $('s-id').textContent  =stats.id;
+    $('s-svc').textContent =stats.svc;
+    $('s-tel').textContent =stats.tel;
+    $('s-addr').textContent=stats.addr;
+
+    if(orangeRows.length){
+      $('orange-wrap').style.display='block';
+      const list=$('orange-list'); list.innerHTML='';
+      for(const{conf,mr,src}of orangeRows){
+        const label=conf==='name_only'?'Sadece isim':'Sadece telefon';
+        const div=document.createElement('div'); div.className='orange-item';
+        div.innerHTML=`<strong>${mr.name||'—'}</strong> ↔ ${srcName(src)||'?'}<span class="badge">${label}</span>`;
+        list.appendChild(div);
+      }
+    } else { $('orange-wrap').style.display='none'; }
+
+    $('result-wrap').style.display='block';
+
+  } catch(e){ log('❌ Hata: '+e.message,'err'); pct(0); }
+  $('btn-run').disabled=false;
+}
+
+/* ─── Mode ───────────────────────────────────────────────────────────── */
+let currentMode = 'compare';
+
+function setMode(mode) {
+  currentMode = mode;
+  $('btn-mode-compare').classList.toggle('active', mode==='compare');
+  $('btn-mode-new').classList.toggle('active', mode==='new');
+  $('card-main').style.display = mode==='compare' ? 'block' : 'none';
+  $('mapping-card').style.display = 'none';
+  $('new-mapping-card').style.display = 'none';
+  $('src-card-title').textContent = mode==='compare' ? '2 — Kaynak verisi' : '1 — Kaynak dosyası (.xlsx veya Google Sheets)';
+  $('header-desc').textContent = mode==='compare'
+    ? 'İki listeyi karşılaştır, farklılıkları renklendirilmiş Excel olarak indir'
+    : 'Kaynak dosyasından doğrudan YENİ EKLENENLER formatında Excel oluştur';
+  $('btn-run').textContent = mode==='compare' ? '▶ Karşılaştır ve Güncelle' : '▶ Yeni Ekleme Listesi Oluştur';
+  /* Eğer kaynak zaten yüklüyse, moda göre eşleştirme tablosunu göster */
+  if (srcCols.length) {
+    if (mode === 'new') showNewMapping(srcCols);
+    else if (mainCols.length) tryShowMapping();
+  }
+  checkReady();
+}
+
+function handleRun() {
+  if (currentMode === 'new') runNewList();
+  else runUpdate();
+}
+
+/* ─── Yeni liste modu ────────────────────────────────────────────────── */
+async function runNewList() {
+  $('btn-run').disabled = true;
+  $('progress-wrap').style.display = 'block';
+  $('result-wrap').style.display = 'none';
+  $('result-compare').style.display = 'none';
+  $('result-new').style.display = 'none';
+  $('log').innerHTML = '';
+  outputBuf = null;
+
+  const GRN_FILL = {type:'pattern',pattern:'solid',fgColor:{argb:'FF00B050'}};
+  const GRN_FONT = {color:{argb:'FFFFFFFF'},bold:false};
+  const HDR_FILL = {type:'pattern',pattern:'solid',fgColor:{argb:'FFD9D9D9'}};
+
+  const NEW_SHEET_COLS = [
+    'Cinsiyet','Sicil No','Adı','Soyadı','Tel','Email',
+    'Site','Semt','Adresi','Kısa Adres','Görev',
+    'Departman','Açıklama','G.Kodu','Güzergah Adı'
+  ];
+  const COLOR_COLS = new Set([
+    'Adı','Soyadı','Tel','Adresi','Kısa Adres','Departman',
+    'G.Kodu','Güzergah Adı','Sicil No','Cinsiyet'
+  ]);
+  const COL_WIDTHS = {
+    'Cinsiyet':8,'Sicil No':10,'Adı':18,'Soyadı':18,'Tel':13,
+    'Email':20,'Site':13,'Semt':13,'Adresi':50,'Kısa Adres':22,
+    'Görev':10,'Departman':22,'Açıklama':15,'G.Kodu':13,'Güzergah Adı':25
+  };
+
+  try {
+    pct(5); log('Kaynak yükleniyor...');
+    const sheetUrl = $('sheet-url').value.trim();
+    if (sheetUrl) {
+      srcDf = await fetchGSheet(sheetUrl);
+      srcCols = srcDf.length ? Object.keys(srcDf[0]) : [];
+      log('✓ Google Sheets: '+srcDf.length+' satır', 'ok');
+      showNewMapping(srcCols);
+    } else if (!srcDf) {
+      throw new Error('Kaynak dosyası seçilmedi.');
+    } else {
+      log('✓ Kaynak Excel: '+srcDf.length+' satır', 'ok');
+    }
+
+    /* Eşleştirme haritasını al */
+    const nm = getNewMapping();
+    if (!nm.name) throw new Error('Ad Soyad sütunu eşleştirilmedi.');
+
+    log(`  Ad: "${nm.name}" | Tel: "${nm.phone}" | Durak→KısaAdres: "${nm.stop}" | Adres: "${nm.address}"`, 'ok');
+
+    pct(35); log('Excel oluşturuluyor...');
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('YENİ EKLENENLER');
+
+    /* Genişlikler + satır kaydırmayı kapat */
+    NEW_SHEET_COLS.forEach((h,i) => {
+      const col = ws.getColumn(i+1);
+      col.width = COL_WIDTHS[h]||12;
+      col.alignment = {wrapText: false, vertical: 'middle'};
+    });
+
+    /* Header */
+    const hdr = ws.addRow(NEW_SHEET_COLS);
+    hdr.font = {bold:true};
+    hdr.eachCell(c => {
+      c.fill = HDR_FILL;
+      c.border = {bottom:{style:'thin',color:{argb:'FF999999'}}};
+      c.alignment = {wrapText: false};
+    });
+
+    pct(50); log('Satırlar yazılıyor...');
+
+    /* ── Editoryal temizlik + Türkçe büyük harf ─────────────────────── */
+    const clean = (v, removeFloor=false) => {
+      if (v == null) return v;
+      let s = String(v);
+
+      /* 1. Satır sonu / paragraf → boşluk */
+      s = s.replace(/[\r\n\u000B\u000C\u0085\u2028\u2029]+/g, ' ');
+
+      /* 2. Görünmez karakterler → boşluk */
+      s = s.replace(/[\u00A0\u200B\u200C\u200D\uFEFF\t]+/g, ' ');
+
+      /* 3. Türkçe büyük harf */
+      s = s.replace(/ğ/g,'Ğ').replace(/ü/g,'Ü').replace(/ş/g,'Ş')
+           .replace(/ı/g,'I').replace(/i/g,'İ').replace(/ö/g,'Ö')
+           .replace(/ç/g,'Ç').toUpperCase();
+
+      /* 4. Adres kısaltmalarında yanlış iki nokta → nokta */
+      s = s.replace(/\b(SOK|SK|CAD|CD|MH|MAH|BUL|BLVD|APT)\s*:/g, '$1.');
+
+      /* 5. Nokta, virgül, noktalı virgülden sonra boşluk yok ise ekle
+             (?=[^\s\d]) = boşluk veya rakam değilse (1.5 veya NO:3 gibi kalıpları korur) */
+      s = s.replace(/([.,;])(?=[^\s\d])/g, '$1 ');
+
+      /* 6. Fazla boşlukları kaldır: iki nokta / slash etrafı */
+      s = s.replace(/\s+([:/])\s*(\d)/g, '$1$2');
+      s = s.replace(/([:/])\s+(\d)/g, '$1$2');
+
+      /* 7. KAT1 → KAT:1, D5 → D:5 */
+      s = s.replace(/\bKAT(\d)/g, 'KAT:$1');
+      s = s.replace(/\b(D)(\d)\b/g, '$1:$2');
+
+      /* 8. Parantez — dışarıdan boşluk, içeriden yok */
+      s = s.replace(/\s*\(\s*/g, ' (');
+      s = s.replace(/\s*\)\s*/g, ') ');
+
+      /* 9. Kat / iç kapı kaldırma */
+      if (removeFloor) {
+        s = s.replace(/İÇ\s*KAPI\s*(NO\s*[:.\/]?\s*)?\d+[\w\/]*/g, '');
+        s = s.replace(/\bKAT\s*[:.\/\-]?\s*\d+(?:[\/.\-]\d+)?/g, '');
+        s = s.replace(/\bK\s*[:.\/]\s*\d+(?:[\/.\-]\d+)?/g, '');
+        s = s.replace(/\bDAİRE\s*(?:NO\s*)?[:.\/]?\s*\d+(?:[\/.\-]\d+)?/g, '');
+        s = s.replace(/\bD\s*[:.\/]\s*\d+(?:[\/.\-]\d+)?/g, '');
+        s = s.replace(/(NO\s*[:.]\s*\d+)\s*D\s*[:.]\s*\d+/g, '$1');
+        s = s.replace(/\/\d+\b/g, '');
+        s = s.replace(/[,;]+\s*$/, '').replace(/\s*[-\/]+\s*$/, '');
+      }
+
+      /* 10. Birden fazla boşluk → tek boşluk */
+      s = s.replace(/ {2,}/g, ' ');
+
+      /* 11. Baş/son boşluk */
+      return s.trim();
+    };
+
+    const up    = v => (typeof v === 'string' ? clean(v, false) : v);
+    const upAdr = v => (typeof v === 'string' ? clean(v, true)  : v);
+
+    /* ── Mükerrer tespiti: önce tüm kayıtları işle, sonra karşılaştır ── */
+    const processed = []; /* {fullName, normName, normPhone, valMap, rowIdx} */
+
+    let femaleCount = 0, maleCount = 0;
+
+    for (const src of srcDf) {
+      const fullN = String(src[nm.name]||'').trim();
+      if (!fullN) continue;
+
+      const gender = predictGender(fullN);
+      if (gender==='K') femaleCount++; else maleCount++;
+
+      const parts = fullN.split(/\s+/);
+      let first, last;
+      if (parts.length <= 2) {
+        last  = parts.pop()||''; first = parts.join(' ');
+      } else if (gender === 'E') {
+        last  = parts[parts.length - 1]; first = parts.slice(0, -1).join(' ');
+      } else {
+        const normSecond = (s => {
+          let r = s.toUpperCase();
+          [['ğ','G'],['ü','U'],['ş','S'],['ı','I'],['i','I'],['ö','O'],['ç','C']].forEach(([a,b])=>r=r.split(a.toUpperCase()).join(b));
+          return r;
+        })(parts[1]);
+        const secondGender = GENDER_MAP[parts[1].toUpperCase()] || GENDER_MAP[normSecond] || null;
+        if (secondGender === 'K') {
+          last  = parts[parts.length - 1]; first = parts.slice(0, -1).join(' ');
+        } else {
+          first = parts[0]; last = parts.slice(1).join(' ');
+        }
+      }
+
+      const tel = nm.phone ? normPhone(src[nm.phone]||'') : '';
+
+      /* Karşılaştırma için normalize edilmiş isim */
+      const nName = (s => {
+        let r = s.toUpperCase();
+        [['İ','I'],['Ğ','G'],['Ü','U'],['Ş','S'],['Ö','O'],['Ç','C']].forEach(([a,b])=>r=r.split(a).join(b));
+        return r.replace(/\s+/g,' ').trim();
+      })(fullN);
+
+      processed.push({
+        fullN, nName, tel,
+        valMap: {
+          'Cinsiyet':    gender,
+          'Sicil No':    nm.id      ? (safeInt(src[nm.id])||null)        : null,
+          'Adı':         up(first)||null,
+          'Soyadı':      up(last)||null,
+          'Tel':         tel ? (parseInt(tel)||tel) : null,
+          'Email':       null, 'Site': null, 'Semt': null,
+          'Adresi':      nm.address ? upAdr(src[nm.address]||null)       : null,
+          'Kısa Adres':  nm.stop    ? up(src[nm.stop]||null)             : null,
+          'Görev':       null,
+          'Departman':   nm.dept    ? up(src[nm.dept]||null)             : null,
+          'Açıklama':    null,
+          'G.Kodu':      nm.svc     ? (src[nm.svc]||null)               : null,
+          'Güzergah Adı':nm.svc     ? up(src[nm.svc]||null)             : null,
+        }
+      });
+    }
+
+    /* ── Mükerrer gruplarını belirle ──────────────────────────────────── */
+    /* İsim + tel aynı → kesin mükerrer (turuncu)
+       Sadece tel aynı (isim farklı) → şüpheli (sarı)
+       Sadece isim aynı (tel farklı) → olası mükerrer (açık sarı) */
+    const ORG_FILL  = {type:'pattern',pattern:'solid',fgColor:{argb:'FFFFA500'}}; // turuncu — kesin
+    const SUS_FILL  = {type:'pattern',pattern:'solid',fgColor:{argb:'FFFFFF99'}}; // sarı — şüpheli tel
+    const NAM_FILL  = {type:'pattern',pattern:'solid',fgColor:{argb:'FFFFFFCC'}}; // açık sarı — isim
+
+    const nameMap  = {}; /* normName → [idx] */
+    const phoneMap = {}; /* tel → [idx] */
+    processed.forEach((p,i) => {
+      if (p.nName) { if(!nameMap[p.nName])  nameMap[p.nName]  = []; nameMap[p.nName].push(i);  }
+      if (p.tel && p.tel.length >= 10) { if(!phoneMap[p.tel]) phoneMap[p.tel] = []; phoneMap[p.tel].push(i); }
+    });
+
+    /* Her satır için mükerrer tipi */
+    const dupType = new Array(processed.length).fill(null); /* null | 'exact' | 'phone' | 'name' */
+    for (const idxs of Object.values(nameMap))  if (idxs.length > 1) idxs.forEach(i => { if (!dupType[i]) dupType[i] = 'name'; });
+    for (const idxs of Object.values(phoneMap)) if (idxs.length > 1) {
+      /* Aynı telefon grubundaki isimleri kontrol et */
+      const names = idxs.map(i => processed[i].nName);
+      idxs.forEach(i => {
+        const isExact = names.filter(n => n === processed[i].nName).length > 1;
+        dupType[i] = isExact ? 'exact' : (dupType[i] === 'exact' ? 'exact' : 'phone');
+      });
+    }
+    /* Hem isim hem tel aynı → 'exact' ile üzerine yaz */
+    processed.forEach((p,i) => {
+      const nameIdxs  = nameMap[p.nName]  || [];
+      const phoneIdxs = phoneMap[p.tel]   || [];
+      if (nameIdxs.length > 1 && phoneIdxs.length > 1) {
+        const overlap = nameIdxs.filter(j => phoneIdxs.includes(j));
+        if (overlap.length > 1) dupType[i] = 'exact';
+      }
+    });
+
+    const dupCounts = {exact:0, phone:0, name:0};
+    dupType.forEach(t => { if(t) dupCounts[t]++; });
+
+    /* ── Excel'e yaz ──────────────────────────────────────────────────── */
+    const excelRows = []; /* row referanslarını sakla, sonra fill uygula */
+    processed.forEach((p) => {
+      const row = ws.addRow(NEW_SHEET_COLS.map(h => p.valMap[h]));
+      excelRows.push(row);
+    });
+
+    /* Fill'i tüm satırlar eklendikten SONRA uygula (ExcelJS shared styles sorunu) */
+    processed.forEach((p, i) => {
+      const fill = dupType[i] === 'exact' ? ORG_FILL
+                 : dupType[i] === 'phone' ? SUS_FILL
+                 : dupType[i] === 'name'  ? NAM_FILL : null;
+      if (fill) {
+        for (let c = 1; c <= NEW_SHEET_COLS.length; c++) {
+          excelRows[i].getCell(c).fill = fill;
+        }
+      }
+    });
+
+    pct(85); log('Mükerrer raporu hazırlanıyor...');
+
+    /* ── Mükerrer raporu sayfası ───────────────────────────────────────── */
+    const totalDups = dupCounts.exact + dupCounts.phone + dupCounts.name;
+    if (totalDups > 0) {
+      const rWs = wb.addWorksheet('MÜKERRER RAPORU');
+      rWs.getColumn(1).width = 30;
+      rWs.getColumn(2).width = 15;
+      rWs.getColumn(3).width = 22;
+      rWs.getColumn(4).width = 22;
+      rWs.getColumn(5).width = 18;
+
+      /* Başlık */
+      const titleRow = rWs.addRow(['MÜKERRER RAPORU', '', '', '', '']);
+      titleRow.font = {bold:true, size:13};
+      rWs.addRow([]);
+
+      /* Özet */
+      rWs.addRow(['Tip', 'Adet', 'Açıklama']).font = {bold:true};
+      rWs.addRow(['Kesin mükerrer (isim+tel)', dupCounts.exact, 'Aynı isim ve telefon numarası']).getCell(1).fill = ORG_FILL;
+      rWs.addRow(['Şüpheli (aynı tel)',        dupCounts.phone, 'Aynı telefon, farklı isim']).getCell(1).fill    = SUS_FILL;
+      rWs.addRow(['Olası (aynı isim)',          dupCounts.name,  'Aynı isim, farklı telefon']).getCell(1).fill   = NAM_FILL;
+      rWs.addRow([]);
+
+      /* Detay header */
+      const dHdr = rWs.addRow(['Ad Soyad', 'Telefon', 'Departman', 'Güzergah', 'Mükerrer Tipi']);
+      dHdr.font = {bold:true};
+      dHdr.eachCell(c => { c.fill = {type:'pattern',pattern:'solid',fgColor:{argb:'FFD9D9D9'}}; });
+
+      processed.forEach((p, i) => {
+        if (!dupType[i]) return;
+        const label = dupType[i]==='exact' ? 'Kesin' : dupType[i]==='phone' ? 'Şüpheli (tel)' : 'Olası (isim)';
+        const fill  = dupType[i]==='exact' ? ORG_FILL : dupType[i]==='phone' ? SUS_FILL : NAM_FILL;
+        const r = rWs.addRow([
+          p.fullN,
+          p.tel || '—',
+          p.valMap['Departman'] || '—',
+          p.valMap['Güzergah Adı'] || '—',
+          label
+        ]);
+        r.eachCell(c => { c.fill = fill; });
+      });
+    }
+
+    pct(92); log('Kaydediliyor...');
+    outputBuf = await wb.xlsx.writeBuffer();
+    pct(100);
+    const dupMsg = totalDups > 0 ? ` — ⚠ ${totalDups} mükerrer bulundu` : ' — mükerrer yok ✓';
+    log(`✓ Tamamlandı — ${ws.rowCount-1} kayıt${dupMsg}`, totalDups > 0 ? 'warn' : 'ok');
+
+    $('s-created').textContent  = ws.rowCount - 1;
+    $('s-female').textContent   = femaleCount;
+    $('s-male').textContent     = maleCount;
+
+    /* Mükerrer özet UI */
+    if (totalDups > 0) {
+      $('dup-summary').style.display = 'block';
+      $('dup-exact').textContent = dupCounts.exact;
+      $('dup-phone').textContent = dupCounts.phone;
+      $('dup-name').textContent  = dupCounts.name;
+
+      const tbody = $('dup-tbody');
+      tbody.innerHTML = '';
+      processed.forEach((p, i) => {
+        if (!dupType[i]) return;
+        const label = dupType[i]==='exact' ? 'Kesin' : dupType[i]==='phone' ? 'Tel eşleşmesi' : 'İsim eşleşmesi';
+        const bg    = dupType[i]==='exact' ? '#fff3e0' : dupType[i]==='phone' ? '#fffff0' : '#fefefe';
+        const bc    = dupType[i]==='exact' ? '#ffa500' : dupType[i]==='phone' ? '#ffd700' : '#e0e0a0';
+        const tr = document.createElement('tr');
+        tr.style.borderLeft = `3px solid ${bc}`;
+        tr.style.background = bg;
+        tr.innerHTML = `
+          <td style="padding:6px 10px;font-weight:500">${p.fullN}</td>
+          <td style="padding:6px 10px;color:#555">${p.tel||'—'}</td>
+          <td style="padding:6px 10px;color:#555">${p.valMap['Departman']||'—'}</td>
+          <td style="padding:6px 10px"><span style="font-size:11px;padding:2px 7px;border-radius:4px;background:${bc};color:#555">${label}</span></td>`;
+        tbody.appendChild(tr);
+      });
+    } else {
+      $('dup-summary').style.display = 'none';
+    }
+
+    $('result-new').style.display = 'block';
+    $('result-wrap').style.display = 'block';
+
+  } catch(e) { log('❌ Hata: '+e.message, 'err'); pct(0); }
+  $('btn-run').disabled = false;
+}
+
+/* ─── Download ───────────────────────────────────────────────────────── */
+function downloadFile(){
+  if(!outputBuf) return;
+  const blob=new Blob([outputBuf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='liste_guncellendi_'+new Date().toISOString().slice(0,10)+'.xlsx';
+  a.click(); URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
