@@ -1109,6 +1109,10 @@ async function runUpdate(){
     const mainIds=new Set(mainRows.map(r=>r.id).filter(Boolean));
     const srcIds =new Set(Object.keys(srcById).map(Number));
 
+    /* Yolcu isim ve telefon seti — ters yön kontrolü için */
+    const mainByName =new Set(mainRows.map(r=>r.name).filter(Boolean));
+    const mainByPhone=new Set(mainRows.map(r=>r.phone).filter(p=>p&&p.length>=10));
+
     for(const src of srcDf){
       const id=srcId(src);
       if(id&&mainIds.has(id)) continue;
@@ -1120,9 +1124,14 @@ async function runUpdate(){
     /* 5. Alt eşleştirme */
     pct(40); log('Eşleştirme yapılıyor...');
     const altMatch={};
-    const matchedSrcIds=new Set();
+    const matchedSrcIdxs=new Set(); /* kaynak dizisindeki INDEX ile takip et */
+
     for(const mr of mainRows){
-      if(mr.id&&srcIds.has(mr.id)){ matchedSrcIds.add(mr.id); continue; }
+      if(mr.id&&srcIds.has(mr.id)){
+        /* SAP ile eşleşti — kaynak dizisindeki indeksi bul */
+        srcDf.forEach((src,i)=>{ if(srcId(src)===mr.id) matchedSrcIdxs.add(i); });
+        continue;
+      }
       const nm=srcByName[mr.name]||[];
       const pm=(mr.phone&&mr.phone.length>=10)?(srcByPhone[mr.phone]||[]):[];
       const both=nm.filter(s=>pm.includes(s));
@@ -1131,13 +1140,49 @@ async function runUpdate(){
       else if(pm.length===1) altMatch[mr.rn]={conf:'phone_only',src:pm[0]};
     }
     for(const{src}of Object.values(altMatch)){
-      const id=srcId(src); if(id) matchedSrcIds.add(id);
+      /* Alt eşleşen kaynak satırının dizisindeki indeksini bul */
+      const idx=srcDf.indexOf(src);
+      if(idx>=0) matchedSrcIdxs.add(idx);
     }
 
-    /* 6. Gerçekten yeni */
-    const trulyNew=srcDf.filter(src=>{
+    /* 5b. Ters yön eşleştirme: SAP'sız kaynak satırı yolcu'da isim/tel ile varsa
+            bunları da altMatch'e ekle — güncelleme olarak işlensin */
+    for(const mr of mainRows){
+      if(altMatch[mr.rn]) continue;   /* zaten alt eşleşmesi var */
+      if(mr.id&&srcIds.has(mr.id)) continue;  /* zaten SAP ile eşleşmiş */
+
+      /* Bu yolcu satırı için kaynak'ta SAP'sız ama isim/tel eşleşen satır ara */
+      const nm=srcByName[mr.name]||[];
+      const pm=(mr.phone&&mr.phone.length>=10)?(srcByPhone[mr.phone]||[]):[];
+
+      /* SAP'sız olanları filtrele */
+      const nmNoSap=nm.filter(s=>!srcId(s));
+      const pmNoSap=pm.filter(s=>!srcId(s));
+      const both=nmNoSap.filter(s=>pmNoSap.includes(s));
+
+      let match=null, conf=null;
+      if(both.length)          { match=both[0];    conf='both'; }
+      else if(nmNoSap.length===1){ match=nmNoSap[0]; conf='name_only'; }
+      else if(pmNoSap.length===1){ match=pmNoSap[0]; conf='phone_only'; }
+
+      if(match){
+        altMatch[mr.rn]={conf, src:match};
+        const idx=srcDf.indexOf(match);
+        if(idx>=0) matchedSrcIdxs.add(idx);
+      }
+    }
+
+    /* 6. Gerçekten yeni — SAP'sız satırlar da dahil
+          Ek kontrol: SAP'sız kaynak satırı yolcu'da isim veya telefonla varsa yeni değil */
+    const trulyNew=srcDf.filter((src,i)=>{
+      if(matchedSrcIdxs.has(i)) return false;       /* zaten eşleşmiş */
       const id=srcId(src);
-      return id&&!mainIds.has(id)&&!matchedSrcIds.has(id);
+      if(id&&mainIds.has(id)) return false;          /* SAP ile yolcu'da var */
+      /* SAP'sız ise isim veya telefonla yolcu'da var mı? */
+      const n=srcName(src), p=srcPhone(src);
+      if(n&&mainByName.has(n)) return false;         /* isimle yolcu'da var */
+      if(p&&p.length>=10&&mainByPhone.has(p)) return false; /* telefonla yolcu'da var */
+      return true;
     });
 
     /* 7. ÇIKTI: Sıfırdan yeni workbook oluştur
