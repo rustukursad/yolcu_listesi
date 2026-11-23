@@ -1,0 +1,40 @@
+TRANSAY LİSTE GÜNCELLEME — Chrome uzantısı v1.1 (Outlook eklentisi de var: https://rustukursad.github.io/yolcu_listesi/liste-guncelleme/)
+
+KURULUM (bir kez)
+1. Zip dosyasını kalıcı bir klasöre açın (ör. Belgeler\ListeGuncelleme). Klasörü sonradan silmeyin/taşımayın.
+2. Chrome adres çubuğuna  chrome://extensions  yazın.
+3. Sağ üstte "Geliştirici modu"nu açın.
+4. "Paketlenmemiş öğe yükle" → açtığınız klasörü seçin (içinde manifest.json olan klasör).
+5. Yapboz simgesinden "Liste Güncelleme"yi sabitleyin. Simgeye tıklayınca araç yeni sekmede açılır.
+Güncelleme: yeni sürümün dosyalarını aynı klasöre kopyalayın, chrome://extensions'ta uzantının ↻ simgesine basın.
+(Edge'de de aynı adımlar: edge://extensions)
+
+YOLCU LİSTESİ
+1. Profil: EKOL hazır gelir. Yolcu listesini ve kaynak dosyayı (ya da Google Sheets bağlantısını) seçin.
+2. Sütun eşlemesini kontrol edin. Farklı bir firma formatı için düzeltip "Eşlemeyi profile kaydet" deyin.
+3. "Karşılaştır" → sonuçları inceleyin. Uygulanmasını istemediğiniz satırın işaretini kaldırın.
+4. "Excel indir" ile şu dosyayı alırsınız:
+   - Yolcu listesi: kırmızı satır = çıkacak, yeşil hücre = kesin değişiklik, turuncu = kontrol edin.
+     Değişen her hücrede eski değer, Excel notu olarak durur.
+   - YENİ EKLENENLER: yeni kişiler, aktarım formatında (ad/soyad ayrılmış, cinsiyet tahmini).
+   - DEĞİŞİKLİKLER: tüm değişikliklerin denetim listesi.
+   - GÜZERGAH ÖZETİ: güzergah başına önce/sonra kişi sayısı, çıkan, geçen, yeni.
+   - UYARILAR: ilçe değişimi, aynı telefon/farklı isim, mükerrer kayıtlar.
+
+DURAK LİSTESİ
+Eski ve yeni durak dökümünü seçin. Araç eklenen, kalkan, saati, sırası, konumu ya da adı değişen
+durakları ve güzergah başına ilk/son durak saati farkını verir. Durak adı değişse bile aynı noktadaki
+durağı (varsayılan 120 m) koordinattan tanır.
+
+GOOGLE SHEETS
+Sayfa "bağlantıya sahip herkes görüntüleyebilir" olmalı, ya da Chrome'da o sayfaya erişimi olan
+hesapla oturum açılmış olmalı. Belirli bir sekme için bağlantının sonunda #gid=... bulunmalı.
+
+GİZLİLİK
+Dosyalar yalnız bu bilgisayarda işlenir. Uzantı internete yalnız Google Sheets bağlantısı
+verildiğinde, o sayfayı okumak için çıkar. Profiller ve isim sözlüğü bu Chrome'da saklanır
+(Ayarlar → dışa aktar ile başka bilgisayara taşınabilir).
+
+SINIRLAR
+- Eski .xls okunmaz: Excel'de "Farklı Kaydet → .xlsx" yapın.
+- Ekranda ilk 1500 satır gösterilir; Excel çıktısında tamamı vardır.

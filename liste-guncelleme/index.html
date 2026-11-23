@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Liste Güncelleme — Transay</title>
+<link rel="icon" href="outlook/assets/icon-32.png">
+<style>
+body{margin:0;font:15px/1.55 "Segoe UI",system-ui,Arial,sans-serif;background:#f4f6f9;color:#1d2733}
+main{max-width:860px;margin:0 auto;padding:32px 22px 60px}
+h1{display:flex;gap:12px;align-items:center;font-size:26px;margin:0 0 6px}h1 img{width:40px}
+.lead{color:#56616e;margin:0 0 26px}
+.card{background:#fff;border:1px solid #e1e6ec;border-radius:12px;padding:20px 22px;margin-bottom:16px}
+h2{font-size:18px;margin:0 0 10px}ol{padding-left:20px}li{margin:6px 0}
+code{background:#eef1f4;padding:2px 6px;border-radius:5px;font-size:13.5px;word-break:break-all}
+.btn{display:inline-block;background:#0b5cad;color:#fff;text-decoration:none;padding:9px 16px;border-radius:8px;font-weight:600;margin:4px 8px 4px 0}
+.btn.ghost{background:#fff;color:#0b5cad;border:1px solid #c5d0dc}
+.note{color:#56616e;font-size:13.5px}
+</style>
+</head>
+<body><main>
+<h1><img src="outlook/assets/icon-64.png" alt="">Liste Güncelleme</h1>
+<p class="lead">Yolcu listesini firmadan gelen kaynakla senkronlar; güzergah, durak ve ilçe değişikliklerini renkli Excel olarak verir. Dosyalar yalnız kullanıcının bilgisayarında işlenir, hiçbir sunucuya gönderilmez.</p>
+
+<div class="card">
+  <h2>Outlook eklentisi (yeni Outlook ve Outlook web)</h2>
+  <ol>
+    <li>Outlook'ta herhangi bir maili açın, üstteki <b>Uygulamalar</b> (ya da <b>…</b> → <b>Eklentileri al</b>) menüsüne girin.</li>
+    <li><b>Eklentilerim</b> → en altta <b>Özel eklentiler</b> → <b>Özel eklenti ekle</b>.</li>
+    <li><b>URL'den ekle</b> deyip şu adresi yapıştırın:<br><code>https://rustukursad.github.io/yolcu_listesi/liste-guncelleme/outlook/manifest.xml</code><br>
+      <span class="note">Ya da manifest dosyasını indirip <b>Dosyadan ekle</b> ile yükleyin.</span></li>
+    <li>Uyarıyı onaylayın. Artık listeli bir mail açınca şeritte <b>Liste Güncelleme</b> düğmesi görünür.</li>
+  </ol>
+  <a class="btn" href="dist/ListeGuncelleme-Outlook-manifest.xml" download>Manifesti indir</a>
+  <p class="note">“Özel eklenti ekle” görünmüyorsa kurumunuz bunu kapatmış olabilir; BT yöneticisi Microsoft 365 yönetim merkezinden aynı manifestle tüm ekibe dağıtabilir.</p>
+  <p><b>Kullanım:</b> mail ekindeki Excel otomatik seçilir (adında “yolcu” geçen ek yolcu listesi, diğeri kaynak sayılır; durak sekmesinde “eski”/“yeni”). Karşılaştır → sonucu <b>Cevaba ekle</b> ile cevap taslağına koyun ya da <b>Excel indir</b>.</p>
+</div>
+
+<div class="card">
+  <h2>Chrome / Edge uzantısı</h2>
+  <ol>
+    <li>Zip'i indirip kalıcı bir klasöre açın.</li>
+    <li><code>chrome://extensions</code> (Edge: <code>edge://extensions</code>) → <b>Geliştirici modu</b> açık → <b>Paketlenmemiş öğe yükle</b> → açtığınız <b>ListeGuncelleme</b> klasörü.</li>
+    <li>Simgeye tıklayınca araç yeni sekmede açılır. Google Sheets kaynağı yalnız bu sürümde çalışır.</li>
+  </ol>
+  <a class="btn" href="dist/ListeGuncelleme-Chrome.zip" download>Chrome uzantısını indir</a>
+</div>
+
+<div class="card">
+  <h2>Tarayıcıda dene</h2>
+  <p>Kurulum yapmadan aynı aracı bu sayfadan açabilirsiniz (mail eki okuma yok, dosyayı elle seçersiniz).</p>
+  <a class="btn ghost" href="outlook/taskpane.html">Aracı aç</a>
+</div>
+<p class="note">Transay Teknoloji · Profiller ve isim sözlüğü kullanıcının Outlook hesabında / tarayıcısında saklanır.</p>
+</main></body></html>

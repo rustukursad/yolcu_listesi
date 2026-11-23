@@ -1,0 +1,88 @@
+:root{--bg:#f4f6f9;--card:#fff;--ink:#1d2733;--mut:#6b7785;--line:#e1e6ec;--pri:#0b5cad;--pri2:#e7f0fa;--red:#d93025;--green:#00a04a;--orange:#f26a00;--yel:#fff4cc}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 "Segoe UI",system-ui,-apple-system,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 24px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.brand{display:flex;gap:10px;align-items:center}.brand img{width:32px;height:32px}.brand b{display:block;font-size:16px}.brand small{color:var(--mut);font-size:12px}
+.tabs button,.subtabs button{border:0;background:none;padding:8px 14px;border-radius:8px;cursor:pointer;color:var(--mut);font:inherit;font-weight:600}
+.tabs button.on,.subtabs button.on{background:var(--pri2);color:var(--pri)}
+main{max-width:1280px;margin:0 auto;padding:18px 24px 60px}
+.tab{display:none}.tab.on{display:block}
+.bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+.card h3{margin:0 0 12px;font-size:15px}.card h4{margin:0 0 8px;font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.03em}
+.sub{font-weight:400;color:var(--mut);font-size:12.5px;margin-left:6px}
+.drop{border:2px dashed #c5d0dc;border-radius:10px;padding:18px;text-align:center;cursor:pointer;display:flex;flex-direction:column;gap:2px;transition:.15s}
+.drop:hover,.drop.over{border-color:var(--pri);background:var(--pri2)}.drop span{color:var(--mut);font-size:12px}
+.filebadge{margin-top:8px;font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.filebadge:empty{display:none}
+.filebadge .ok{color:var(--green);font-weight:600}
+.or{color:var(--mut);font-size:12px;margin:10px 0 6px;text-align:center}
+.row{display:flex;gap:8px;align-items:center;margin-top:6px}.row input[type=url],.row input:not([type]){flex:1}
+input,select,button{font:inherit}
+input[type=url],input[type=search],input:not([type]),input[type=number],select{border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff}
+input[type=number]{width:80px}
+button{cursor:pointer}
+.primary{background:var(--pri);color:#fff;border:0;border-radius:8px;padding:9px 18px;font-weight:600}.primary:hover{filter:brightness(1.08)}.primary:disabled{opacity:.5;cursor:default}
+.ghost,.btnlike{background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 12px;color:var(--ink)}.ghost:hover,.btnlike:hover{border-color:var(--pri);color:var(--pri)}
+.btnlike{display:inline-block;cursor:pointer}
+.hint{color:var(--mut);font-size:12.5px}
+.map{display:grid;grid-template-columns:150px 1fr;gap:6px 10px;align-items:center}
+.map label{font-size:13px;color:var(--mut)}.map select{width:100%}
+.map .sample{grid-column:2;font-size:11.5px;color:var(--mut);margin-top:-4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.opts{margin-top:12px}.opts summary{cursor:pointer;color:var(--pri);font-weight:600}.opts label{display:block;margin:8px 0}
+.actions{margin-top:14px;display:flex;justify-content:flex-end}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px}.stat b{display:block;font-size:24px}.stat span{color:var(--mut);font-size:12.5px}
+.stat.red b{color:var(--red)}.stat.green b{color:var(--green)}.stat.orange b{color:var(--orange)}.stat.blue b{color:var(--pri)}
+.resbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tablewrap{overflow:auto;max-height:62vh;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{position:sticky;top:0;background:#f0f3f7;text-align:left;font-weight:600;padding:7px 9px;border-bottom:1px solid var(--line);white-space:nowrap;z-index:1}
+td{padding:6px 9px;border-bottom:1px solid #eef1f4;vertical-align:top}
+tr.skip td{opacity:.45;text-decoration:line-through}
+td.old{color:#8a6d00}td.new{font-weight:600}
+.tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.tag.high{background:#dff3e6;color:#06713a}.tag.mid{background:#ffe7d6;color:#b04a00}.tag.red{background:#fde2e0;color:#a4231a}.tag.blue{background:var(--pri2);color:var(--pri)}.tag.gray{background:#eef1f4;color:var(--mut)}.tag.yel{background:var(--yel);color:#7a5c00}
+.num{text-align:right;font-variant-numeric:tabular-nums}.pos{color:var(--green);font-weight:600}.neg{color:var(--red);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.chip{background:#eef1f4;border-radius:14px;padding:3px 10px;font-size:12.5px}.chip button{border:0;background:none;color:var(--mut);margin-left:4px;padding:0}
+.legend{margin:0;padding-left:18px}.legend li{margin:5px 0}
+.sw{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:4px}.sw.red{background:#ff0000}.sw.green{background:#00b050}.sw.orange{background:#ff6600}
+.plist{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}.plist div{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1d2733;color:#fff;padding:10px 16px;border-radius:8px;opacity:0;transition:.25s;pointer-events:none;max-width:80vw}
+#toast.show{opacity:1}#toast.err{background:var(--red)}
+.empty{padding:24px;text-align:center;color:var(--mut)}
+
+/* ── Mail ekleri (Outlook) ── */
+.att{display:flex;gap:8px;align-items:center;margin-bottom:8px;padding:8px 10px;background:var(--pri2);border-radius:8px}
+.att label{font-weight:600;font-size:12.5px;color:var(--pri);white-space:nowrap}.att select{flex:1;min-width:0}
+.host-outlook .drop{padding:10px}
+
+/* ── Dar panel (Outlook görev bölmesi ~320–450 px) ── */
+@media (max-width:620px){
+  body{font-size:13.5px}
+  .top{flex-direction:column;align-items:stretch;gap:6px;padding:8px 10px}
+  .brand img{width:24px;height:24px}.brand b{font-size:14px}.brand small{font-size:11px}
+  .tabs{display:flex}.tabs button{flex:1;padding:7px 4px}
+  main{padding:10px 10px 40px}
+  .card{padding:12px;border-radius:10px}
+  .bar{gap:8px}.bar .hint{display:none}.bar label{flex:1;display:flex;gap:6px;align-items:center}.bar select{flex:1;min-width:0}
+  .map{grid-template-columns:1fr;gap:2px}.map label{margin-top:6px}.map .sample{grid-column:1;margin-top:0}
+  .stats{grid-template-columns:1fr 1fr;gap:6px}.stat{padding:8px 10px}.stat b{font-size:19px}
+  .resbar,.tools{flex-direction:column;align-items:stretch}
+  .subtabs{display:flex;flex-wrap:wrap;gap:2px}.subtabs button{padding:6px 8px;font-size:12.5px}
+  .tablewrap{max-height:none;border:0;overflow:visible}
+  table,thead,tbody,tr,td{display:block;width:100%}
+  thead{display:none}
+  tr{border:1px solid var(--line);border-radius:8px;margin-bottom:8px;padding:6px 8px;background:#fff}
+  td{border:0;padding:2px 0;display:flex;gap:8px}
+  td[data-label]::before{content:attr(data-label);flex:0 0 92px;color:var(--mut);font-size:11.5px;font-weight:600}
+  td[data-label=""]::before,td:not([data-label])::before{display:none}
+  td.num{text-align:left}
+  .actions .primary{width:100%}
+}
+
+.mapdet>summary{list-style:none;cursor:pointer}.mapdet>summary::-webkit-details-marker{display:none}
+.mapdet>summary h3::after{content:' ▾';color:var(--mut);font-weight:400}.mapdet:not([open])>summary h3::after{content:' ▸ düzenlemek için tıkla';font-size:12px}
+.host-outlook .gs{display:none}

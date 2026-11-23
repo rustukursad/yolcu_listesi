@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Transay Liste Güncelleme",
+  "version": "1.1.0",
+  "description": "Yolcu listesini kaynak dosyayla senkronlar; güzergah, durak ve ilçe değişikliklerini renkli Excel olarak verir. Veri bilgisayardan çıkmaz.",
+  "action": {
+    "default_title": "Liste Güncelleme",
+    "default_icon": {
+      "16": "icons/16.png",
+      "48": "icons/48.png",
+      "128": "icons/128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "storage",
+    "unlimitedStorage"
+  ],
+  "host_permissions": [
+    "https://docs.google.com/*",
+    "https://*.googleusercontent.com/*"
+  ]
+}

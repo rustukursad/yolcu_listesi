@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Liste Güncelleme</title>
+<link rel="icon" href="assets/icon-32.png">
+<link rel="stylesheet" href="../shared/ui.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><img src="assets/icon-32.png" alt=""><div><b>Liste Güncelleme</b><small>Veriler bu bilgisayarda işlenir, hiçbir yere gönderilmez</small></div></div>
+  <nav class="tabs" id="tabs">
+    <button data-tab="sync" class="on">Yolcu listesi</button>
+    <button data-tab="stops">Durak listesi</button>
+    <button data-tab="settings">Ayarlar</button>
+  </nav>
+</header>
+
+<main>
+<!-- ═══════════ YOLCU LİSTESİ SENKRONU ═══════════ -->
+<section id="tab-sync" class="tab on">
+  <div class="bar">
+    <label>Profil <select id="sync-profile"></select></label>
+    <button id="sync-save-profile" class="ghost">Eşlemeyi profile kaydet</button>
+    <span class="hint">Profil, sütun eşlemesini hatırlar. Bir kez ayarla, sonra sadece dosyaları seç.</span>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>1 · Yolcu listesi <span class="sub">güncellenecek liste</span></h3>
+      <div class="drop" id="drop-main"><b>Dosyayı sürükle ya da tıkla</b><span>.xlsx · .csv</span><input type="file" accept=".xlsx,.csv,.xls" hidden></div>
+      <div class="filebadge" id="badge-main"></div>
+    </div>
+    <div class="card">
+      <h3>2 · Kaynak <span class="sub">firmadan gelen güncel liste</span></h3>
+      <div class="drop" id="drop-src"><b>Dosyayı sürükle ya da tıkla</b><span>.xlsx · .csv</span><input type="file" accept=".xlsx,.csv,.xls" hidden></div>
+      <div class="or gs">ya da Google Sheets bağlantısı</div>
+      <div class="row gs"><input id="gs-url" type="url" placeholder="https://docs.google.com/spreadsheets/d/..."><button id="gs-load" class="ghost">Yükle</button></div>
+      <div class="filebadge" id="badge-src"></div>
+    </div>
+  </div>
+
+  <div class="card" id="map-card" hidden>
+    <details class="mapdet" open><summary><h3>3 · Sütun eşleme <span class="sub">otomatik algılandı, gerekirse düzelt</span></h3></summary>
+    <div class="grid2">
+      <div><h4>Yolcu listesi</h4><div id="map-main" class="map"></div></div>
+      <div><h4>Kaynak</h4><div id="map-src" class="map"></div></div>
+    </div></details>
+    <details class="opts">
+      <summary>Eşleştirme ayarları</summary>
+      <label><input type="checkbox" id="opt-name" checked> Sicil yoksa yalnız isimle eşleştir (turuncu)</label>
+      <label><input type="checkbox" id="opt-phone" checked> Sicil yoksa yalnız telefonla eşleştir (turuncu)</label>
+      <label>Adres benzerlik eşiği <input type="range" id="opt-addr" min="0.5" max="0.98" step="0.01" value="0.85"> <b id="opt-addr-v">0.85</b> <span class="hint">bu oranın altı “adres değişti” sayılır</span></label>
+    </details>
+    <div class="actions"><button id="sync-run" class="primary">Karşılaştır</button></div>
+  </div>
+
+  <div id="sync-result" hidden>
+    <div class="stats" id="sync-stats"></div>
+    <div class="card">
+      <div class="resbar">
+        <nav class="subtabs" id="sync-subtabs">
+          <button data-v="changes" class="on">Değişiklikler</button>
+          <button data-v="removed">Çıkacaklar</button>
+          <button data-v="added">Yeni eklenenler</button>
+          <button data-v="routes">Güzergah özeti</button>
+          <button data-v="warnings">Uyarılar</button>
+        </nav>
+        <div class="tools">
+          <select id="chg-filter" title="Filtre">
+            <option value="">Tüm değişiklikler</option>
+            <option value="mid">Yalnız kontrol gerekenler (turuncu)</option>
+            <option value="güzergah">Güzergah / durak</option>
+            <option value="adres">Adres</option>
+            <option value="kimlik">Sicil / isim</option>
+            <option value="iletişim">Telefon</option>
+          </select>
+          <input id="sync-search" type="search" placeholder="Ara: isim, sicil, güzergah">
+          <button id="sync-download" class="primary">Excel indir</button>
+        </div>
+      </div>
+      <p class="hint" id="sync-viewhint"></p>
+      <div class="tablewrap" id="sync-table"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ DURAK LİSTESİ KARŞILAŞTIRMA ═══════════ -->
+<section id="tab-stops" class="tab">
+  <div class="bar">
+    <label>Profil <select id="stops-profile"></select></label>
+    <button id="stops-save-profile" class="ghost">Eşlemeyi profile kaydet</button>
+    <span class="hint">Eski ve yeni durak dökümünü karşılaştırır: eklenen, kalkan, saati / sırası / konumu / adı değişen duraklar.</span>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3>1 · Eski durak listesi</h3>
+      <div class="drop" id="drop-old"><b>Dosyayı sürükle ya da tıkla</b><span>.xlsx · .csv</span><input type="file" accept=".xlsx,.csv,.xls" hidden></div>
+      <div class="filebadge" id="badge-old"></div>
+    </div>
+    <div class="card">
+      <h3>2 · Yeni durak listesi</h3>
+      <div class="drop" id="drop-new"><b>Dosyayı sürükle ya da tıkla</b><span>.xlsx · .csv</span><input type="file" accept=".xlsx,.csv,.xls" hidden></div>
+      <div class="filebadge" id="badge-new"></div>
+    </div>
+  </div>
+  <div class="card" id="smap-card" hidden>
+    <details class="mapdet" open><summary><h3>3 · Sütun eşleme</h3></summary>
+    <div class="grid2">
+      <div><h4>Eski liste</h4><div id="map-old" class="map"></div></div>
+      <div><h4>Yeni liste</h4><div id="map-new" class="map"></div></div>
+    </div></details>
+    <details class="opts">
+      <summary>Karşılaştırma ayarları</summary>
+      <label>Konum değişikliği eşiği <input type="number" id="opt-move" value="50" min="5" step="5"> m</label>
+      <label>Adı değişmiş durak için arama yarıçapı <input type="number" id="opt-rename" value="120" min="10" step="10"> m</label>
+    </details>
+    <div class="actions"><button id="stops-run" class="primary">Karşılaştır</button></div>
+  </div>
+  <div id="stops-result" hidden>
+    <div class="stats" id="stops-stats"></div>
+    <div class="card">
+      <div class="resbar">
+        <nav class="subtabs" id="stops-subtabs">
+          <button data-v="items" class="on">Duraklar</button>
+          <button data-v="routes">Güzergah özeti</button>
+        </nav>
+        <div class="tools">
+          <select id="stops-filter"><option value="">Değişenler</option><option value="all">Tümü (aynı olanlar dahil)</option><option value="added">Eklenen</option><option value="removed">Kalkan</option><option value="SAAT">Saati değişen</option><option value="KONUM">Konumu değişen</option></select>
+          <input id="stops-search" type="search" placeholder="Ara: güzergah, durak">
+          <button id="stops-download" class="primary">Excel indir</button>
+        </div>
+      </div>
+      <div class="tablewrap" id="stops-table"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ AYARLAR ═══════════ -->
+<section id="tab-settings" class="tab">
+  <div class="grid2">
+    <div class="card">
+      <h3>Kayıtlı profiller</h3>
+      <div id="profile-list"></div>
+      <p class="hint">Profiller bu Chrome'da saklanır. Başka bilgisayara taşımak için dışa aktar.</p>
+      <div class="row"><button id="prof-export" class="ghost">Profilleri dışa aktar</button><label class="ghost btnlike">İçe aktar<input type="file" id="prof-import" accept=".json" hidden></label></div>
+    </div>
+    <div class="card">
+      <h3>İsim sözlüğü eklemeleri <span class="sub">cinsiyet tahmini ve ad/soyad ayırma</span></h3>
+      <div class="row"><input id="nm-name" placeholder="İsim (ör. MAVİLİ)"><select id="nm-g"><option value="K">Kadın</option><option value="E">Erkek</option></select><button id="nm-add" class="ghost">Ekle</button></div>
+      <div id="nm-list" class="chips"></div>
+      <div class="row"><input id="nm-test" placeholder="Dene: EDA NUR BAYRAM"><span id="nm-test-out" class="hint"></span></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Renkler ve kurallar</h3>
+    <ul class="legend">
+      <li><i class="sw red"></i> Kırmızı satır: kaynakta eşleşmesi yok, listeden çıkacak</li>
+      <li><i class="sw green"></i> Yeşil hücre: kesin değişiklik (sicil ya da isim+telefon eşleşmesi)</li>
+      <li><i class="sw orange"></i> Turuncu hücre: orta güven (yalnız isim ya da yalnız telefon eşleşmesi, isim düzeltmesi), kontrol edin</li>
+      <li>Eşleştirme sırası: Sicil/SAP → isim+telefon (eksik soyad dahil) → yalnız isim → yalnız telefon. Kaynakta sicili olmayan ama listede isim/telefonla bulunan kişi yeni sayılmaz, güncellenir.</li>
+      <li>Adres: kat/daire bilgisi silinir; mahalle, cadde ve sokak kısaltmaları tekleştirilerek karşılaştırılır. İlçe değişirse güzergah riski olarak uyarı verir.</li>
+      <li>Değişen her hücrede eski değer, Excel notu olarak durur. Tüm değişiklikler “DEĞİŞİKLİKLER” sayfasında listelenir.</li>
+    </ul>
+  </div>
+</section>
+</main>
+
+<div id="toast"></div>
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+<script src="../shared/lib/exceljs.min.js"></script>
+<script src="../shared/js/core.js"></script>
+<script src="../shared/js/sync.js"></script>
+<script src="../shared/js/stops.js"></script>
+<script src="../shared/js/io.js"></script>
+<script src="host-outlook.js"></script>
+<script src="../shared/js/ui.js"></script>
+</body>
+</html>
