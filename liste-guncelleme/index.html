@@ -24,14 +24,14 @@ code{background:#eef1f4;padding:2px 6px;border-radius:5px;font-size:13.5px;word-
 <div class="card">
   <h2>Outlook eklentisi (yeni Outlook ve Outlook web)</h2>
   <ol>
-    <li>Outlook'ta herhangi bir maili açın, üstteki <b>Uygulamalar</b> (ya da <b>…</b> → <b>Eklentileri al</b>) menüsüne girin.</li>
-    <li><b>Eklentilerim</b> → en altta <b>Özel eklentiler</b> → <b>Özel eklenti ekle</b>.</li>
-    <li><b>URL'den ekle</b> deyip şu adresi yapıştırın:<br><code>https://rustukursad.github.io/yolcu_listesi/liste-guncelleme/outlook/manifest.xml</code><br>
-      <span class="note">Ya da manifest dosyasını indirip <b>Dosyadan ekle</b> ile yükleyin.</span></li>
-    <li>Uyarıyı onaylayın. Artık listeli bir mail açınca şeritte <b>Liste Güncelleme</b> düğmesi görünür.</li>
+    <li>Aşağıdaki <b>Manifesti indir</b> düğmesiyle <code>manifest.xml</code> dosyasını bilgisayara kaydedin.</li>
+    <li>Tarayıcıda <a href="https://aka.ms/olksideload">https://aka.ms/olksideload</a> adresini açın. Outlook web açılır, birkaç saniye sonra <b>Outlook Eklentileri</b> penceresi gelir.
+      <span class="note">(Klasik Outlook'ta: Dosya → Bilgi → Eklentileri Yönet aynı pencereyi açar.)</span></li>
+    <li>Pencerede <b>Eklentilerim</b> → en altta <b>Özel eklentiler</b> → <b>Özel eklenti ekle</b> → <b>Dosyadan ekle</b> → indirdiğiniz <code>manifest.xml</code>. Uyarıları onaylayın.</li>
+    <li>Eklenti Outlook web'de hemen görünür. Yeni Outlook (Windows) uygulamasına geçmesi önbellek nedeniyle birkaç saati, en fazla 24 saati bulabilir.</li>
   </ol>
   <a class="btn" href="dist/ListeGuncelleme-Outlook-manifest.xml" download>Manifesti indir</a>
-  <p class="note">“Özel eklenti ekle” görünmüyorsa kurumunuz bunu kapatmış olabilir; BT yöneticisi Microsoft 365 yönetim merkezinden aynı manifestle tüm ekibe dağıtabilir.</p>
+  <p class="note">“URL'den ekle” seçeneği Microsoft tarafından kapatıldı, yalnız dosyadan yükleme çalışır. “Özel eklentiler” bölümü hiç görünmüyorsa kurum bunu kapatmıştır: BT, Exchange'de “My Custom Apps” rolünü tanımlayabilir ya da manifesti Microsoft 365 yönetim merkezinden ekibe dağıtabilir.</p>
   <p><b>Kullanım:</b> mail ekindeki Excel otomatik seçilir (adında “yolcu” geçen ek yolcu listesi, diğeri kaynak sayılır; durak sekmesinde “eski”/“yeni”). Karşılaştır → sonucu <b>Cevaba ekle</b> ile cevap taslağına koyun ya da <b>Excel indir</b>.</p>
 </div>
 
